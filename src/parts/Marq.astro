@@ -1,0 +1,5 @@
+---
+interface Props { n: string; t: string; dir?: number }
+const { n, t, dir = 1 } = Astro.props;
+---
+<div class="marq" data-dir={dir} aria-hidden="true"><div class="marq-in">{[0, 1, 2, 3].map(() => <><span><b>Part {n}</b>{t}</span><i>✦</i></>)}</div></div>

@@ -1,0 +1,135 @@
+---
+import Marq from './Marq.astro';
+---
+<Marq n="04" t="CAP · ACID · BASE" dir={-1} />
+
+<!-- ACID -->
+<section class="chapter acidc" id="acid" data-scene="grid" data-chapter="ACID" data-part="4">
+  <div class="acid-head">
+    <div class="stack-v">
+      <p class="eyebrow">Transactions · the ACID properties</p>
+      <h2 class="h-display" data-split>Four promises a bank <em>needs.</em></h2>
+    </div>
+    <p class="body-copy">Relational databases are built on ACID. Each letter is a promise about what happens when many users change data at once, or when something crashes. Pick a letter and break things on purpose.</p>
+  </div>
+  <div class="acid-lab">
+    <div class="acid-tabs" role="tablist" aria-label="ACID property">
+      <button type="button" role="tab" class="on" data-p="a"><b>A</b>Atomicity</button>
+      <button type="button" role="tab" data-p="c"><b>C</b>Consistency</button>
+      <button type="button" role="tab" data-p="i"><b>I</b>Isolation</button>
+      <button type="button" role="tab" data-p="d"><b>D</b>Durability</button>
+    </div>
+    <article class="panel acid-panel">
+      <div class="panel-head"><span id="ac-k">Atomicity</span><span class="tag" id="ac-state">idle</span></div>
+      <div class="panel-body">
+        <p class="acid-def" id="ac-def"></p>
+        <div class="acct-row" id="ac-accts"></div>
+        <div class="btn-row" id="ac-btns"></div>
+        <pre class="term" id="ac-log" style="min-height:6.4em"></pre>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- CAP -->
+<section class="chapter capc" id="cap" data-scene="cap" data-chapter="CAP theorem" data-part="4">
+  <div class="cap-head">
+    <div class="stack-v">
+      <p class="eyebrow">The CAP theorem</p>
+      <h2 class="h-display" data-split>Pick <em>two.</em></h2>
+    </div>
+    <div class="stack-v">
+      <p class="body-copy">With replicated data, an update to one copy must reach every other copy. Enforcing that strictly (serializability) is the strongest form of consistency, and it is expensive. The <strong>CAP theorem</strong> names three properties we want from a distributed system with replicated data and says you <strong>cannot guarantee all three at once</strong>.</p>
+    </div>
+  </div>
+  <div class="cap-defs">
+    <div class="c"><b>C · Consistency</b><p>The nodes have the same copies of a replicated item, visible to every transaction. Each client sees the same data.</p></div>
+    <div class="a"><b>A · Availability</b><p>Every read or write is either processed successfully or gets a message that it cannot be completed. Each client can always read and write.</p></div>
+    <div class="p"><b>P · Partition tolerance</b><p>The system keeps working when a network fault splits the nodes into partitions that can only talk among themselves.</p></div>
+  </div>
+  <div class="cap-grid">
+    <article class="panel cap-tri">
+      <div class="panel-head"><span>Choose an edge</span><span class="tag kv" id="cap-tag">CP</span></div>
+      <div class="panel-body">
+        <svg class="cap-svg" id="cap-svg" viewBox="0 0 420 360" role="group" aria-label="CAP triangle. Choose which two properties to keep."></svg>
+        <p class="body-copy" id="cap-p"></p>
+        <div class="cap-ex" id="cap-ex"></div>
+        <p class="note">Examples follow the classic “visual guide to NoSQL systems” from the course slides. Treat them as rough: many modern systems let you tune consistency per request.</p>
+      </div>
+    </article>
+    <article class="panel cap-sim">
+      <div class="panel-head"><span>Partition simulator · seats left on a flight</span><span class="tag" id="cs-link">link up</span></div>
+      <div class="panel-body">
+        <div class="dcs">
+          <div class="dc" id="dc-w"><span class="nm">Data centre West</span><span class="val">12</span><span class="ver">v1</span><button type="button" class="btn" data-dc="w">Book a seat here</button></div>
+          <div class="dc-link" id="dc-link"><i></i><button type="button" class="btn" id="cs-cut">Cut the link</button></div>
+          <div class="dc" id="dc-e"><span class="nm">Data centre East</span><span class="val">12</span><span class="ver">v1</span><button type="button" class="btn" data-dc="e">Book a seat here</button></div>
+        </div>
+        <div class="btn-row"><button type="button" class="btn" data-read="w">Read at West</button><button type="button" class="btn" data-read="e">Read at East</button><button type="button" class="btn" id="cs-reset">Reset</button></div>
+        <div class="lab-result" id="cs-out">The link is up, so both data centres agree. Cut the link, then book a seat in each.</div>
+      </div>
+    </article>
+  </div>
+  <div class="cap-notes">
+    <div><b>It is not binary</b><p>AP systems relax consistency in favour of availability, but they are not inconsistent. CP systems give up some availability, but they are not usually down. Both offer a degree of all three.</p></div>
+    <div><b>Why NoSQL leans AP</b><p>In a NoSQL store, weaker consistency is often acceptable, while availability and partition tolerance are essential. So many adopt <strong>eventual consistency</strong> instead of serializability.</p></div>
+    <div><b>Where CA fits</b><p>“CA” means no partition tolerance: it only works if the network never splits, which in practice means a single site, like a traditional RDBMS.</p></div>
+  </div>
+</section>
+    <!-- 12 CONSISTENCY -->
+    <section class="chapter cons" id="consistency" data-scene="ring" data-chapter="Tunable consistency" data-part="4">
+      <div class="cons-head">
+        <div style="display:grid;gap:20px">
+          <p class="eyebrow">Between C and A · quorums</p>
+          <h2 class="h-display" data-split>Three copies. <em>Who is right?</em></h2>
+        </div>
+        <p class="body-copy">With copies on several machines, a write takes time to reach all of them. Systems like Cassandra let you choose per request: <strong>W</strong> is how many replicas must confirm a write, <strong>R</strong> is how many you ask on a read. If <strong>R + W &gt; N</strong>, every read overlaps at least one replica that has the latest acknowledged write.</p>
+      </div>
+      <div class="lab-grid">
+        <article class="panel lab-ctl">
+          <div class="panel-head"><span>Quorum controls</span><span>N = 3</span></div>
+          <div class="panel-body">
+            <div class="stepper"><span class="lbl">Write acks <b>W</b></span><span class="ctl"><button type="button" data-st="w" data-d="-1" aria-label="Decrease W">−</button><output id="cw">1</output><button type="button" data-st="w" data-d="1" aria-label="Increase W">+</button></span></div>
+            <div class="stepper"><span class="lbl">Read replicas <b>R</b></span><span class="ctl"><button type="button" data-st="r" data-d="-1" aria-label="Decrease R">−</button><output id="cr">1</output><button type="button" data-st="r" data-d="1" aria-label="Increase R">+</button></span></div>
+            <div class="rule-box" id="rule-box"><span class="eq" id="rule-eq">1 + 1 = 2 ≤ 3</span><span id="rule-txt">Fast, but a read can miss the newest write.</span></div>
+            <div class="btn-row"><button type="button" class="btn solid" id="c-write">Write new price</button><button type="button" class="btn" id="c-read">Read price</button></div>
+            <p class="note">Each replica receives the write after a random network delay. Cut a replica off to simulate a network partition.</p>
+          </div>
+        </article>
+        <article class="panel lab-stage">
+          <div class="panel-head"><span>Replicas of product 31 · price</span><span id="c-clock">t = 0 ms</span></div>
+          <div class="panel-body">
+            <div class="replicas" id="replicas"></div>
+            <div class="lab-result" id="c-result">Write a new price, then read it back before every replica has caught up.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+<!-- ACID vs BASE -->
+<section class="chapter basec" id="base" data-scene="ring" data-chapter="ACID vs BASE" data-part="4">
+  <div class="base-head">
+    <div class="stack-v">
+      <p class="eyebrow">NoSQL, no ACID?</p>
+      <h2 class="h-display" data-split>ACID <em>vs</em> BASE</h2>
+    </div>
+    <div class="stack-v">
+      <p class="body-copy">In distributed, parallel systems it is difficult, sometimes impossible, to guarantee ACID. Long-running transactions do not work, because keeping resources locked for a long time is not practical. So many NoSQL systems give ACID less importance, and some ignore it.</p>
+      <p class="body-copy"><strong>BASE</strong> is an acronym contrived to be the opposite of ACID.</p>
+    </div>
+  </div>
+  <div class="base-word" aria-label="Basically Available, Soft state, Eventually consistent">
+    <div><b>BA</b><span>Basically Available</span><p>The system keeps answering, even during failures, perhaps with partial or older data.</p></div>
+    <div><b>S</b><span>Soft state</span><p>Copies of the data may differ for a while, even without new input, while updates spread.</p></div>
+    <div><b>E</b><span>Eventually consistent</span><p>If writes stop, every copy converges to the same value. Watch the replicas below.</p></div>
+  </div>
+  <div class="conv panel">
+    <div class="panel-head"><span>Eventual consistency · live</span><button type="button" class="btn" id="cv-write">Write a new value</button></div>
+    <div class="panel-body conv-row" id="conv-row"></div>
+  </div>
+  <div class="ab2">
+    <div><h3>ACID</h3><ul><li>Strong consistency</li><li>Isolation</li><li>Focus on “commit”</li><li>Nested transactions</li><li>Availability?</li><li>Conservative (pessimistic)</li><li>Difficult evolution (e.g. schema)</li></ul></div>
+    <div><h3>BASE</h3><ul><li>Weak consistency: stale data OK</li><li>Availability first</li><li>Best effort</li><li>Approximate answers OK</li><li>Aggressive (optimistic)</li><li>Simpler</li><li>Faster</li><li>Easier evolution</li></ul></div>
+  </div>
+  <p class="note">Lists from Eric Brewer’s 2000 PODC keynote, as in the course slides; see also Dan Pritchett’s “BASE: An Acid Alternative” (2008). ACID suits money; BASE suits feeds, carts and counters.</p>
+</section>

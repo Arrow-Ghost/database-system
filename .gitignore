@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+!.env.example
+server/node_modules/
+server/.env
+.DS_Store
+dist-api/

@@ -1,0 +1,346 @@
+---
+import Marq from './Marq.astro';
+---
+<Marq n="07" t="Types of NoSQL" dir={1} />
+    <!-- 10 FAMILIES -->
+    <section class="chapter fam" id="families" data-chapter="Four families" data-part="7">
+      <i class="anchor" data-scene="kv" style="position:absolute;top:0"></i>
+      <i class="anchor" data-scene="doc" style="position:absolute;top:24%"></i>
+      <i class="anchor" data-scene="col" style="position:absolute;top:48%"></i>
+      <i class="anchor" data-scene="graph" style="position:absolute;top:72%"></i>
+      <div class="fam-sticky" id="fam-sticky">
+        <div class="fam-left">
+          <div class="fam-step on" data-step="0">
+            <span class="idx">FAMILY 1 OF 4</span>
+            <h2>Key<br />value</h2>
+            <p class="lede">A giant, distributed dictionary.</p>
+            <dl>
+              <dt>Stores</dt><dd>(key, value) pairs, like a hash map or associative array. The value can be anything: text, a record, a document. The database never looks inside it.</dd>
+              <dt>Operations</dt><dd>Insert(key, value), Fetch(key), Update(key), Delete(key). Average access time stays very low.</dd>
+              <dt>Strength</dt><dd>The fastest possible lookup by key, and it partitions easily across machines.</dd>
+              <dt>Watch out</dt><dd>You can only ask “give me the value for this key”. No querying by what is inside.</dd>
+              <dt>Used for</dt><dd>Sessions, caches, shopping carts, counters, rate limits, leaderboards.</dd>
+              <dt>Examples</dt><dd>Redis, Amazon DynamoDB, Riak, Voldemort, Couchbase</dd>
+            </dl>
+          </div>
+          <div class="fam-step" data-step="1">
+            <span class="idx">FAMILY 2 OF 4</span>
+            <h2>Document</h2>
+            <p class="lede">Self-describing records you can query by any field.</p>
+            <dl>
+              <dt>Stores</dt><dd>Loosely structured documents in a standard format (JSON, BSON in MongoDB, XML), each with a unique key. A document is the NoSQL counterpart of a row, but documents in one collection can differ.</dd>
+              <dt>Strength</dt><dd>Retrieve by key <strong>or by contents</strong>. Fields can be indexed (B-trees), and nested objects and arrays are allowed.</dd>
+              <dt>Watch out</dt><dd>Relationships across documents are awkward. Copied data must be kept in sync.</dd>
+              <dt>Used for</dt><dd>Product catalogues, user profiles, content management, mobile app backends.</dd>
+              <dt>Examples</dt><dd>MongoDB, Couchbase, CouchDB, Firestore</dd>
+            </dl>
+          </div>
+          <div class="fam-step" data-step="2">
+            <span class="idx">FAMILY 3 OF 4</span>
+            <h2>Column<br />family</h2>
+            <p class="lede">Sorted, column-oriented, built for huge tables.</p>
+            <dl>
+              <dt>Stores</dt><dd>The smallest unit is a <strong>column</strong>: a name, a value and a timestamp. Columns are grouped into <strong>column families</strong>, rows are identified by a <strong>row key</strong> and kept sorted by it. A row stores only the columns it has, so NULLs cost nothing.</dd>
+              <dt>Strength</dt><dd>Enormous write throughput and fast reads of a slice, such as “the last hour for sensor 17”.</dd>
+              <dt>Watch out</dt><dd>You model tables around your queries up front. Ad hoc queries are limited.</dd>
+              <dt>Used for</dt><dd>Time series, IoT telemetry, event logs, messaging history.</dd>
+              <dt>Examples</dt><dd>Google Bigtable, HBase, Apache Cassandra, ScyllaDB</dd>
+            </dl>
+          </div>
+          <div class="fam-step" data-step="3">
+            <span class="idx">FAMILY 4 OF 4</span>
+            <h2>Graph</h2>
+            <p class="lede">Relationships are first-class data.</p>
+            <dl>
+              <dt>Stores</dt><dd>Everything is a node, an edge or an attribute. Nodes and edges can have any number of attributes and can be labelled, and labels narrow searches. Related nodes are found by traversing edges with path expressions.</dd>
+              <dt>Strength</dt><dd>Following connections hop by hop stays fast. There are no expensive multi-way joins.</dd>
+              <dt>Watch out</dt><dd>Harder to spread one big graph across machines. Not built for bulk aggregates.</dd>
+              <dt>Used for</dt><dd>Social networks, recommendations, fraud rings, knowledge graphs, routing.</dd>
+              <dt>Examples</dt><dd>Neo4j (open source, native graph, ACID transactions; public since 2007, written in Java and Scala), Amazon Neptune, ArangoDB</dd>
+            </dl>
+          </div>
+          <div class="fam-progress" id="fam-progress"><i class="on"></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="fam-right">
+          <!-- KV -->
+          <div class="fam-demo panel on" data-demo="0">
+            <div class="panel-head"><span>redis-style console · key-value</span><span class="tag kv">Key-value</span></div>
+            <div class="panel-body">
+              <div class="kv-store" id="kv-store"></div>
+              <pre class="term kv-out" id="kv-out"></pre>
+              <div style="display:grid;gap:8px">
+                <form class="kv-input" id="kv-form"><input class="field" id="kv-in" autocomplete="off" spellcheck="false" placeholder="Try: GET session:9f3a" aria-label="Command" /><button class="btn solid" type="submit">Run</button></form>
+                <div class="btn-row" id="kv-quick">
+                  <button type="button" class="btn" data-cmd="GET session:9f3a">GET session</button>
+                  <button type="button" class="btn" data-cmd="INCR post:812:likes">INCR likes</button>
+                  <button type="button" class="btn" data-cmd="SET cart:u1 sku-31,sku-58">SET cart</button>
+                  <button type="button" class="btn" data-cmd="DEL session:9f3a">DEL session</button>
+                  <button type="button" class="btn" data-cmd="KEYS *">KEYS *</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- DOC -->
+          <div class="fam-demo panel" data-demo="1">
+            <div class="panel-head"><span>products collection · document</span><span class="tag doc">Document</span></div>
+            <div class="panel-body">
+              <div style="display:grid;gap:8px">
+                <div class="doc-chips" id="doc-chips">
+                  <button type="button" class="btn" data-f="cat">category: "audio"</button>
+                  <button type="button" class="btn" data-f="price">price &lt; 3000</button>
+                  <button type="button" class="btn" data-f="stock">inStock: true</button>
+                  <button type="button" class="btn" data-f="tag">tags: "wireless"</button>
+                </div>
+                <pre class="term" id="doc-q" style="min-height:2.4em"></pre>
+              </div>
+              <div class="doc-list" id="doc-list"></div>
+              <p class="note" id="doc-count"></p>
+            </div>
+          </div>
+          <!-- COLUMN -->
+          <div class="fam-demo panel" data-demo="2">
+            <div class="panel-head"><span>readings table · wide-column</span><span class="tag col">Column family</span></div>
+            <div class="panel-body">
+              <div style="display:grid;gap:8px">
+                <div class="btn-row">
+                  <button type="button" class="btn solid" id="col-ingest">Ingest reading</button>
+                  <button type="button" class="btn" id="col-query">Last 3 for s-17</button>
+                  <button type="button" class="btn" id="col-clear">Clear query</button>
+                </div>
+                <pre class="term" id="col-cql" style="min-height:3.6em"></pre>
+              </div>
+              <div class="col-wrap" id="col-wrap"></div>
+              <p class="note">PRIMARY KEY ((sensor_id), ts): sensor_id is the partition key, ts is the clustering column, newest first.</p>
+            </div>
+          </div>
+          <!-- GRAPH -->
+          <div class="fam-demo panel" data-demo="3">
+            <div class="panel-head"><span>social graph · click a person</span><span class="tag graph">Graph</span></div>
+            <div class="panel-body">
+              <pre class="term" id="g-cy" style="min-height:3.6em"></pre>
+              <svg class="graph-svg" id="graph-svg" viewBox="0 0 520 330" role="img" aria-label="A small social graph. Select a person to highlight who they follow and who those people follow."></svg>
+              <div class="graph-legend"><span><i style="background:var(--ivory)"></i>Selected</span><span><i style="background:var(--amber)"></i>Follows (1 hop)</span><span><i style="background:var(--ice)"></i>Friends of friends (2 hops)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+<!-- ARCHIVE: glass folders -->
+<section class="chapter archive" id="archive" data-scene="graph" data-chapter="Notable systems" data-part="7">
+  <div class="archive-head">
+    <div class="stack-v">
+      <p class="eyebrow">Notable systems, family by family</p>
+      <h2 class="h-display" data-split>Open the <em>folders.</em></h2>
+    </div>
+    <p class="body-copy">One folder per family. Each file is a database named in the course material. Click a folder to fan out its files, then pick one. Users are the companies listed in the slides, which date from the early 2010s, so some have since moved on.</p>
+  </div>
+  <div class="archive-folders" id="archive-folders"></div>
+  <article class="panel archive-info" aria-live="polite">
+    <div class="panel-head"><span id="ar-k">Pick a file</span><span class="tag" id="ar-tag">—</span></div>
+    <div class="panel-body archive-body">
+      <h3 id="ar-h">Open any folder</h3>
+      <p class="body-copy" id="ar-p">Each folder holds three or four systems. Their files carry generated artwork, so no two look alike.</p>
+      <div class="ar-users" id="ar-users"></div>
+    </div>
+  </article>
+</section>
+    <!-- 13 COMPARE -->
+    <section class="chapter cmp" id="compare" data-scene="grid" data-chapter="SQL vs NoSQL" data-part="7">
+      <div class="cmp-head">
+        <div style="display:grid;gap:20px;max-width:760px">
+          <p class="eyebrow">Side by side</p>
+          <h2 class="h-display" data-split>SQL vs <em>NoSQL</em></h2>
+          <p class="body-copy">Different bets about what matters most. The textbook contrast holds, but modern systems keep borrowing from each other.</p>
+        </div>
+        <button type="button" class="btn" id="cmp-blur" aria-pressed="false">Show where the line blurs</button>
+      </div>
+      <div class="tbl-wrap">
+        <table class="cmp-table">
+          <thead><tr><th></th><th>SQL · relational</th><th>NoSQL · non-relational</th></tr></thead>
+          <tbody>
+            <tr><th>Storage model</th><td>Rows and tables</td><td>Key-value pairs, documents (JSON, XML), column families or graphs</td></tr>
+            <tr><th>Schema</th><td>Fixed, defined before writing (schema on write)</td><td>Flexible, interpreted when reading (schema on read)<span class="blur">Most document stores support optional schema validation.</span></td></tr>
+            <tr><th>Relationships</th><td>Foreign keys and joins</td><td>Embedded data, or links resolved by the application<span class="blur">Graph databases make relationships their strongest feature.</span></td></tr>
+            <tr><th>Scaling</th><td>Mostly vertical; sharding is possible but hard</td><td>Horizontal by design<span class="blur">Distributed SQL systems such as Google Spanner and CockroachDB scale out too.</span></td></tr>
+            <tr><th>Transactions</th><td>ACID across many rows and tables</td><td>Often per record or per partition, tunable consistency<span class="blur">MongoDB has supported multi-document ACID transactions since version 4.0 (2018).</span></td></tr>
+            <tr><th>Data manipulation</th><td>SQL: SELECT, INSERT, UPDATE, an ISO standard</td><td>Object-oriented APIs and product-specific languages<span class="blur">Cassandra has CQL, Couchbase has SQL++; PostgreSQL stores and indexes JSON with JSONB.</span></td></tr>
+            <tr><th>Best at</th><td>Complex queries, reporting, strict integrity</td><td>Huge scale, high write rates, evolving or varied data</td></tr>
+            <tr><th>Examples</th><td>PostgreSQL, MySQL, Oracle, SQL Server</td><td>MongoDB, Redis, Cassandra, Neo4j, DynamoDB</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <!-- 14 ADVANTAGES -->
+    <section class="chapter adv" id="advantages" data-scene="nodes" data-chapter="Advantages" data-part="7">
+      <div class="adv-head">
+        <p class="eyebrow">Advantages</p>
+        <h2 class="h-display" data-split>What you <em>gain.</em></h2>
+        <p class="body-copy">Six reasons teams reach for NoSQL. Keep scrolling: the cards stack.</p>
+      </div>
+      <div class="stack" id="stack">
+        <article class="scard">
+          <div><p class="k">Advantage · scalability</p><h3>Grows sideways</h3><p class="body-copy">Need more capacity? Add nodes. The cluster rebalances data onto them while it keeps serving. Capacity grows roughly in step with the hardware you add.</p><div class="why"><span><b>Because:</b> data is partitioned by key from the start.</span></div></div>
+          <div class="vis vis-scale" aria-hidden="true"><i style="left:8%"></i><i style="left:21%;animation-delay:.4s"></i><i style="left:34%;animation-delay:.8s"></i><i style="left:47%;animation-delay:1.2s"></i><i style="left:60%;animation-delay:1.6s"></i><i style="left:73%;animation-delay:2s"></i><i style="left:8%;bottom:48%;animation-delay:2.4s"></i><i style="left:21%;bottom:48%;animation-delay:2.8s"></i><i style="left:34%;bottom:48%;animation-delay:3.2s"></i><span class="vis-cap">nodes joining a live cluster</span></div>
+        </article>
+        <article class="scard">
+          <div><p class="k">Advantage · flexibility</p><h3>Schema that keeps up</h3><p class="body-copy">Ship a feature that needs a new field today, without a migration window. Old and new shapes live side by side in the same collection.</p><div class="why"><span><b>Because:</b> structure is checked by the application, or by optional validation.</span></div></div>
+          <div class="vis vis-flex" aria-hidden="true"><div class="dshape">{'{'}<span class="f" style="animation-delay:0s">  "name": "Asha",</span><span class="f" style="animation-delay:.6s">  "email": "asha@mail.in",</span><span class="f" style="animation-delay:1.2s">  "phone": "98xxxxxx12",</span><span class="f" style="animation-delay:1.8s">  "tags": ["vip", "beta"],</span><span class="f" style="animation-delay:2.4s">  "loyalty_tier": "gold"</span>{'}'}</div><span class="vis-cap">fields arrive as features ship</span></div>
+        </article>
+        <article class="scard">
+          <div><p class="k">Advantage · performance</p><h3>Reads in one hop</h3><p class="body-copy">Data that is read together is stored together. A profile page becomes one key lookup or one document fetch instead of a five-table join.</p><div class="why"><span><b>Because:</b> you model data around your queries.</span></div></div>
+          <div class="vis vis-perf" aria-hidden="true"><span class="lab" style="top:22%">one document read</span><div class="lane" style="top:34%"><i></i></div><span class="lab" style="top:56%">five-table join (illustrative)</span><div class="lane slow" style="top:68%"><i></i></div><span class="vis-cap">relative, not measured</span></div>
+        </article>
+        <article class="scard">
+          <div><p class="k">Advantage · availability</p><h3>Survives failure</h3><p class="body-copy">With copies on several nodes, and often several data centres, a crashed machine is routine. Replicas take over and clients barely notice.</p><div class="why"><span><b>Because:</b> replication and automatic failover are built in.</span></div></div>
+          <div class="vis vis-avail" aria-hidden="true"><div class="n p" style="left:8%;top:30%">primary</div><div class="n r" style="left:39%;top:30%">replica</div><div class="n" style="left:70%;top:30%">replica</div><span class="vis-cap">primary fails · replica promoted</span></div>
+        </article>
+        <article class="scard">
+          <div><p class="k">Advantage · cost</p><h3>Commodity hardware</h3><p class="body-copy">Clusters of ordinary servers, or managed cloud services billed by use, replace one expensive high-end machine. You pay for capacity as you need it.</p><div class="why"><span><b>Because:</b> the software handles failures the hardware does not prevent.</span></div></div>
+          <div class="vis vis-cost" aria-hidden="true"><div class="bars"><i style="height:30%"></i><i style="height:42%;animation-delay:.3s"></i><i style="height:55%;animation-delay:.6s"></i><i style="height:66%;animation-delay:.9s"></i><i style="height:78%;animation-delay:1.2s"></i></div><span class="vis-cap">capacity added in small steps</span></div>
+        </article>
+        <article class="scard">
+          <div><p class="k">Advantage · developer speed</p><h3>Matches your code</h3><p class="body-copy">A JSON document looks like the object in your program. Less mapping code, fewer schema meetings, faster iteration in agile teams.</p><div class="why"><span><b>Because:</b> the stored shape mirrors the in-memory shape.</span></div></div>
+          <div class="vis vis-dev" aria-hidden="true"><div class="code" id="dev-code"></div><span class="vis-cap">object in, document out</span></div>
+        </article>
+      </div>
+    </section>
+    <!-- 15 LIMITATIONS -->
+    <section class="chapter lim" id="limitations" data-scene="strand" data-chapter="Limitations" data-part="7">
+      <div style="display:grid;gap:20px;max-width:900px">
+        <p class="eyebrow">Limitations</p>
+        <h2 class="h-display" data-split>What it <em>costs.</em></h2>
+        <p class="body-copy">Every advantage on the previous cards was paid for somewhere. Hover or tap a card to see how teams cope.</p>
+      </div>
+      <div class="lim-grid">
+        <button type="button" class="flip"><div class="flip-in"><div class="face front"><span class="k">You lose</span><div><h3>Instant consistency</h3><p>Replicas can disagree for a moment. A read may return yesterday’s price.</p></div><span class="hint">Tap to flip</span></div><div class="face back"><span class="k">Teams cope by</span><div><h3>Tuning per query</h3><p>Use quorum reads and writes, or strongly consistent reads, where correctness matters, and eventual reads elsewhere.</p></div><span class="hint">Tap to flip back</span></div></div></button>
+        <button type="button" class="flip"><div class="flip-in"><div class="face front"><span class="k">You lose</span><div><h3>Easy joins</h3><p>Most NoSQL stores cannot join collections efficiently. Ad hoc questions get hard.</p></div><span class="hint">Tap to flip</span></div><div class="face back"><span class="k">Teams cope by</span><div><h3>Modelling for queries</h3><p>Embed related data, keep one table per query pattern, or export to an analytics warehouse.</p></div><span class="hint">Tap to flip back</span></div></div></button>
+        <button type="button" class="flip"><div class="flip-in"><div class="face front"><span class="k">You lose</span><div><h3>One standard</h3><p>Every product has its own API and query language. Skills do not transfer cleanly.</p></div><span class="hint">Tap to flip</span></div><div class="face back"><span class="k">Teams cope by</span><div><h3>Standardising</h3><p>Pick one or two stores per company, and use SQL-like layers such as CQL or SQL++ where they exist.</p></div><span class="hint">Tap to flip back</span></div></div></button>
+        <button type="button" class="flip"><div class="flip-in"><div class="face front"><span class="k">You lose</span><div><h3>Single source of truth</h3><p>Denormalised data copies facts into many places. Updates can miss a copy.</p></div><span class="hint">Tap to flip</span></div><div class="face back"><span class="k">Teams cope by</span><div><h3>Owning updates</h3><p>Change data through one service, propagate with events, and run reconciliation jobs.</p></div><span class="hint">Tap to flip back</span></div></div></button>
+        <button type="button" class="flip"><div class="flip-in"><div class="face front"><span class="k">You lose</span><div><h3>Multi-record transactions</h3><p>Many stores only guarantee atomic changes to one record or one partition.</p></div><span class="hint">Tap to flip</span></div><div class="face back"><span class="k">Teams cope by</span><div><h3>Choosing carefully</h3><p>Keep money and inventory in a relational or transactional store. Some NoSQL systems now offer transactions too.</p></div><span class="hint">Tap to flip back</span></div></div></button>
+        <button type="button" class="flip"><div class="flip-in"><div class="face front"><span class="k">You lose</span><div><h3>Decades of tooling</h3><p>Reporting, BI and admin tools grew up around SQL. Expertise is scarcer.</p></div><span class="hint">Tap to flip</span></div><div class="face back"><span class="k">Teams cope by</span><div><h3>Using managed services</h3><p>Let the cloud provider run backups and scaling, and check driver and monitoring support before adopting.</p></div><span class="hint">Tap to flip back</span></div></div></button>
+      </div>
+    </section>
+    <!-- 16 APPLICATIONS -->
+    <section class="chapter apps" id="apps" data-scene="globe" data-chapter="In the wild" data-part="7">
+      <div style="display:grid;gap:20px;max-width:900px;margin-bottom:4vh">
+        <p class="eyebrow">Applications</p>
+        <h2 class="h-display" data-split>Where NoSQL <em>runs.</em></h2>
+        <p class="body-copy">Do you have a large set of uncontrolled, unstructured data you are trying to force into an RDBMS? That is the classic sign. Scroll through the workloads; on the right are deployments the companies themselves have written about.</p>
+      </div>
+      <div class="when">
+        <div class="when-yes"><h3>When and why</h3><ul>
+          <li>The relational model is too restrictive (you need a flexible schema)</li>
+          <li>ACID support is not really needed</li>
+          <li>Object-relational impedance mismatch hurts</li>
+          <li>RDBMS would not scale out for the load</li>
+          <li>Logging data from distributed sources; log analysis</li>
+          <li>Storing events and temporal or time-based data</li>
+          <li>Temporary data: shopping carts, wish lists, session data</li>
+          <li>Social feeds and external feeds from partners</li>
+          <li>Large feeds that must be massaged before they enter an RDBMS</li>
+        </ul></div>
+        <div class="when-no"><h3>When not</h3><ul>
+          <li>Financial data</li>
+          <li>Data that requires strict ACID compliance</li>
+          <li>Business-critical data where correctness beats speed</li>
+        </ul><p class="note">Polyglot persistence: use the best store for each kind of data, often next to an RDBMS.</p></div>
+      </div>
+      <div class="apps-grid">
+        <div class="apps-list" id="apps-list">
+          <div class="use"><div class="tags"><span class="tag doc">Document</span><span class="tag graph">Graph</span></div><h3>Social feeds and messaging</h3><p>Profiles, posts, follower graphs and chat history for millions of users writing at once.</p></div>
+          <div class="use"><div class="tags"><span class="tag kv">Key-value</span><span class="tag doc">Document</span></div><h3>E-commerce</h3><p>Shopping carts that must always accept writes, and catalogues where every product has different attributes.</p></div>
+          <div class="use"><div class="tags"><span class="tag col">Wide-column</span></div><h3>IoT and time series</h3><p>Sensors write constantly, and data is read back by device and time window.</p></div>
+          <div class="use"><div class="tags"><span class="tag kv">Key-value</span><span class="tag col">Wide-column</span></div><h3>Real-time analytics</h3><p>Counters, leaderboards and dashboards updated as events arrive.</p></div>
+          <div class="use"><div class="tags"><span class="tag kv">Key-value</span><span class="tag doc">Document</span></div><h3>Gaming</h3><p>Player state, inventories and live sessions that need very low latency at launch-day scale.</p></div>
+          <div class="use"><div class="tags"><span class="tag graph">Graph</span></div><h3>Recommendations and fraud</h3><p>“People who bought this” and rings of suspicious accounts are questions about connections.</p></div>
+          <div class="use"><div class="tags"><span class="tag kv">Key-value</span></div><h3>Caching and sessions</h3><p>An in-memory key-value layer in front of a slower database absorbs most read traffic.</p></div>
+        </div>
+        <div class="apps-side">
+          <p class="note"><b>Documented deployments.</b> Each links to the company’s own paper or engineering post.</p>
+          <div class="deploy">
+            <a href="https://www.allthingsdistributed.com/2007/10/amazons_dynamo.html" target="_blank" rel="noopener"><b>Amazon</b><span class="tag kv">Dynamo</span><p>Dynamo was built so the shopping cart stays writable even when servers or networks fail.</p><span class="src">Dynamo paper · 2007 ↗</span></a>
+            <a href="https://research.google/pubs/bigtable-a-distributed-storage-system-for-structured-data/" target="_blank" rel="noopener"><b>Google</b><span class="tag col">Bigtable</span><p>Used by more than sixty Google products at the time, including web indexing, Google Earth and Google Finance.</p><span class="src">Bigtable paper · 2006 ↗</span></a>
+            <a href="https://engineering.fb.com/2010/11/15/core-infra/the-underlying-technology-of-messages/" target="_blank" rel="noopener"><b>Facebook</b><span class="tag col">HBase</span><p>Facebook’s 2010 Messages system stored message data in HBase.</p><span class="src">Facebook Engineering · 2010 ↗</span></a>
+            <a href="https://netflixtechblog.com/scaling-time-series-data-storage-part-i-ec2b6d44ba39" target="_blank" rel="noopener"><b>Netflix</b><span class="tag col">Cassandra</span><p>Viewing history, a huge time series, is stored in Cassandra.</p><span class="src">Netflix Tech Blog ↗</span></a>
+            <a href="https://discord.com/blog/how-discord-stores-trillions-of-messages" target="_blank" rel="noopener"><b>Discord</b><span class="tag col">Cassandra → ScyllaDB</span><p>Messages moved from Cassandra to ScyllaDB, another wide-column store, as volume reached trillions.</p><span class="src">Discord blog · 2023 ↗</span></a>
+            <a href="https://engineering.linkedin.com/voldemort/announcing-voldemort-160-open-source-release" target="_blank" rel="noopener"><b>LinkedIn</b><span class="tag kv">Voldemort</span><p>LinkedIn built Voldemort, its own distributed key-value store, and open-sourced it.</p><span class="src">LinkedIn Engineering ↗</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- 17 CHOOSER -->
+    <section class="chapter choose" id="choose" data-chapter="Choose" data-part="7">
+      <div style="display:grid;gap:20px;max-width:900px">
+        <p class="eyebrow">Interactive · decision aid</p>
+        <h2 class="h-display" data-split>Which database <em>fits?</em></h2>
+        <p class="body-copy">Answer four questions about a workload. The bars show how strongly each model fits. Relational is always on the table.</p>
+      </div>
+      <div class="ch-grid">
+        <form class="ch-q" id="ch-form">
+          <fieldset><legend><span>Q1</span>What shape is the data?</legend><div class="chips">
+            <input type="radio" name="q1" id="q1a" value="rows" checked /><label for="q1a">Uniform rows</label>
+            <input type="radio" name="q1" id="q1b" value="nested" /><label for="q1b">Nested, varied records</label>
+            <input type="radio" name="q1" id="q1c" value="events" /><label for="q1c">Time-ordered events</label>
+            <input type="radio" name="q1" id="q1d" value="links" /><label for="q1d">Highly connected</label>
+            <input type="radio" name="q1" id="q1e" value="blobs" /><label for="q1e">Opaque values by ID</label>
+          </div></fieldset>
+          <fieldset><legend><span>Q2</span>How will you read it?</legend><div class="chips">
+            <input type="radio" name="q2" id="q2a" value="adhoc" checked /><label for="q2a">Ad hoc queries, reports</label>
+            <input type="radio" name="q2" id="q2b" value="key" /><label for="q2b">Lookup by ID</label>
+            <input type="radio" name="q2" id="q2c" value="fields" /><label for="q2c">Filter on many fields</label>
+            <input type="radio" name="q2" id="q2d" value="range" /><label for="q2d">Ranges over time</label>
+            <input type="radio" name="q2" id="q2e" value="traverse" /><label for="q2e">Follow relationships</label>
+          </div></fieldset>
+          <fieldset><legend><span>Q3</span>Multi-record transactions?</legend><div class="chips">
+            <input type="radio" name="q3" id="q3a" value="must" checked /><label for="q3a">Essential</label>
+            <input type="radio" name="q3" id="q3b" value="some" /><label for="q3b">Occasionally</label>
+            <input type="radio" name="q3" id="q3c" value="no" /><label for="q3c">Rarely</label>
+          </div></fieldset>
+          <fieldset><legend><span>Q4</span>Expected scale?</legend><div class="chips">
+            <input type="radio" name="q4" id="q4a" value="one" checked /><label for="q4a">One server is fine</label>
+            <input type="radio" name="q4" id="q4b" value="grow" /><label for="q4b">Growing fast</label>
+            <input type="radio" name="q4" id="q4c" value="huge" /><label for="q4c">Massive, global</label>
+          </div></fieldset>
+          <div class="btn-row"><button type="button" class="btn" data-preset="bank">Example: bank ledger</button><button type="button" class="btn" data-preset="iot">Example: smart meters</button><button type="button" class="btn" data-preset="social">Example: social network</button><button type="button" class="btn" data-preset="shop">Example: product catalogue</button></div>
+        </form>
+        <aside class="panel ch-result" aria-live="polite">
+          <div class="panel-head"><span>Best fit</span><span class="dots"><i></i><i></i><i></i></span></div>
+          <div class="panel-body">
+            <span class="pick" id="ch-pick">Relational</span>
+            <p class="body-copy" id="ch-why"></p>
+            <div class="ch-bars" id="ch-bars"></div>
+            <p class="note">A teaching heuristic, not a rulebook. Real choices also weigh team skills, cost and existing systems.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+    <!-- 18 POLYGLOT -->
+    <section class="chapter poly" id="polyglot" data-scene="graph" data-chapter="Polyglot" data-part="7">
+      <div style="display:grid;gap:20px;max-width:960px">
+        <p class="eyebrow">SQL and NoSQL together</p>
+        <h2 class="h-display" data-split>Better <em>together.</em></h2>
+        <p class="body-copy">Real systems rarely pick one database. Martin Fowler popularised the term <strong>polyglot persistence</strong>: each part of an application uses the store that suits its data. Select a service.</p>
+      </div>
+      <div class="poly-stage">
+        <div class="panel"><div class="panel-body">
+          <svg class="poly-svg" id="poly-svg" viewBox="0 0 900 520" role="group" aria-label="Online store architecture with five data stores">
+            <g id="poly-wires"></g>
+            <g>
+              <rect class="core" x="350" y="200" width="200" height="96" rx="4" />
+              <text class="t1" x="450" y="240" text-anchor="middle">Online store</text>
+              <text class="t2" x="450" y="262" text-anchor="middle">web + mobile app</text>
+            </g>
+            <g id="poly-svcs"></g>
+          </svg>
+        </div></div>
+        <aside class="panel poly-info" aria-live="polite">
+          <div class="panel-head"><span id="poly-k">Service</span><span class="tag" id="poly-tag">—</span></div>
+          <div class="panel-body">
+            <h3 id="poly-h">Select a service</h3>
+            <p class="body-copy" id="poly-p">Each box is one part of the same shop, backed by a different store.</p>
+            <pre class="term" id="poly-code" style="min-height:3em"></pre>
+          </div>
+        </aside>
+      </div>
+    </section>

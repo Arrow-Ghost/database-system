@@ -1,0 +1,140 @@
+---
+import Marq from './Marq.astro';
+import FrameStage from './FrameStage.astro';
+const mrSteps = [
+  { from: 0, to: 0.2, color: '#ece7da', icon: '▤', title: 'Split the input', label: 'Split',
+    text: 'The input is cut into <b>M splits</b>, typically 16 to 64 MB each, stored across the cluster. A <b>master</b> assigns one map task per split to idle workers, preferring machines that already hold that split, so code moves to the data.' },
+  { from: 0.2, to: 0.42, color: '#ff8a1f', icon: 'ƒ', title: 'Map', label: 'Map',
+    text: 'Each mapper runs your <b>map(key, value)</b> function on its split and emits intermediate pairs. For word count, every word becomes <b>(word, 1)</b>. An optional <b>combiner</b> can pre-add pairs on the mapper, so less data crosses the network.' },
+  { from: 0.42, to: 0.64, color: '#9cc8ff', icon: '⇄', title: 'Shuffle and sort', label: 'Shuffle',
+    text: 'Pairs are partitioned with <b>hash(key) mod R</b>, so every pair with the same key goes to the same reducer. Each reducer fetches its partition from every mapper and sorts by key, grouping values: <b>(data, [1, 1, 1])</b>.' },
+  { from: 0.64, to: 0.84, color: '#9fdc8c', icon: 'Σ', title: 'Reduce', label: 'Reduce',
+    text: 'Each reducer calls your <b>reduce(key, values)</b> once per key. For word count it adds the ones: <b>(data, 3)</b>. The results are written as R output files.' },
+  { from: 0.84, to: 1.01, color: '#d8c7ff', icon: '↻', title: 'Survive failures', label: 'Recover',
+    text: 'The master pings every worker. If one dies, its tasks simply <b>run again</b> on another machine. That is safe because the functions are deterministic and a task’s output only counts once it completes. Slow “straggler” tasks get backup copies near the end.' },
+];
+---
+<Marq n="06" t="Distribution · MapReduce" dir={-1} />
+
+<!-- DISTRIBUTION MODELS -->
+<section class="chapter distc" id="distribution" data-scene="sites" data-chapter="Distribution models" data-part="6">
+  <div class="dist-head">
+    <div class="stack-v">
+      <p class="eyebrow">Distribution models</p>
+      <h2 class="h-display" data-split>Split it, copy it, <em>or both.</em></h2>
+    </div>
+    <p class="body-copy">Aggregates make distribution natural: each one is a unit to place on a node. There are two ways to distribute data. <strong>Sharding</strong> puts different data on different nodes. <strong>Replication</strong> copies the same data to several nodes, either <strong>master-slave</strong> or <strong>peer-to-peer</strong>. Real systems combine them.</p>
+  </div>
+  <div class="dist-grid">
+    <div class="dist-tabs" role="tablist" aria-label="Distribution model">
+      <button type="button" role="tab" class="on" data-m="single"><span>1</span>Single server</button>
+      <button type="button" role="tab" data-m="shard"><span>2</span>Sharding</button>
+      <button type="button" role="tab" data-m="ms"><span>3</span>Master-slave</button>
+      <button type="button" role="tab" data-m="p2p"><span>4</span>Peer-to-peer</button>
+      <button type="button" role="tab" data-m="combo"><span>5</span>Sharding + replication</button>
+    </div>
+    <article class="panel dist-stage">
+      <div class="panel-head"><span id="dm-k">Single server</span><div class="btn-row"><button type="button" class="btn solid" id="dm-w">Write</button><button type="button" class="btn" id="dm-r">Read</button><button type="button" class="btn" id="dm-f">Fail a node</button><button type="button" class="btn" id="dm-x">Two writes at once</button></div></div>
+      <div class="panel-body">
+        <svg class="dist-svg" id="dist-svg" viewBox="0 0 600 300" role="img" aria-label="Nodes and data flows for the selected distribution model"></svg>
+        <div class="dist-pc"><div><b>Good for</b><p id="dm-good"></p></div><div><b>Watch out</b><p id="dm-bad"></p></div></div>
+        <div class="lab-result" id="dm-out"></div>
+      </div>
+    </article>
+  </div>
+</section>
+    <!-- 11 MACHINE -->
+    <section class="chapter mach" id="cluster" data-scene="nodes" data-chapter="The cluster" data-part="6">
+      <div class="mach-sticky" id="mach-sticky">
+        <div class="mach-canvas" id="mach-canvas"></div>
+        <div class="mach-labels" id="mach-labels"></div>
+        <div class="mach-tip panel" id="mach-tip"><b></b><span></span></div>
+        <div class="mach-copy">
+          <p class="eyebrow">Sharding + replication, in 3D</p>
+          <div class="mach-steps">
+            <div class="mach-step on" data-ms="0">
+              <h3>Sharding splits the data</h3>
+              <p>A <strong>shard key</strong> is hashed and the hash decides which shard owns the record. Here the hash space 0–1023 is cut into three ranges, one per shard. Add shards and each one owns a smaller slice: that is horizontal scaling.</p>
+            </div>
+            <div class="mach-step" data-ms="1">
+              <h3>Replication copies it</h3>
+              <p>Every shard keeps <strong>three copies</strong> (replication factor 3) on different nodes. Writes land on the primary and stream to replicas, so reads can be spread out and one dead disk loses nothing.</p>
+            </div>
+            <div class="mach-step" data-ms="2">
+              <h3>Failover keeps it up</h3>
+              <p>Click a glowing primary to kill it. The surviving replicas <strong>elect a new primary</strong> within seconds and writes continue. MongoDB works this way. Cassandra goes further and has no primary at all: any replica accepts writes.</p>
+            </div>
+          </div>
+        </div>
+        <p class="mach-hint">Drag to orbit · hover a node · click a node to fail or revive it</p>
+        <div class="mach-ctl panel">
+          <div class="panel-head"><span>Cluster console · 3 shards × RF 3</span><span class="dots"><i></i><i></i><i></i></span></div>
+          <div class="panel-body">
+            <div class="row">
+              <input class="field" id="m-key" value="user:42" aria-label="Key to write or read" autocomplete="off" spellcheck="false" />
+              <button type="button" class="btn solid" id="m-write">Write</button>
+              <button type="button" class="btn" id="m-read">Read</button>
+            </div>
+            <div class="row">
+              <button type="button" class="btn" id="m-burst">Write 12 keys</button>
+              <button type="button" class="btn" id="m-fail">Fail shard B primary</button>
+              <button type="button" class="btn" id="m-cut">Exploded view</button>
+              <button type="button" class="btn" id="m-reset">Reset</button>
+            </div>
+            <pre class="term mach-log" id="m-log"></pre>
+          </div>
+        </div>
+        <div class="mach-fallback" id="mach-fallback">3D view needs WebGL. Turn on hardware acceleration and reload.</div>
+      </div>
+    </section>
+
+<!-- MAPREDUCE -->
+<FrameStage id="mapreduce" chapter="MapReduce" scene="funnel" part="6" draw="mr"
+  eyebrow="MapReduce · Dean and Ghemawat, Google, 2004"
+  title="Map. Shuffle. <em>Reduce.</em>"
+  sub="A programming model for processing huge data sets on a cluster. You write two small functions; the framework handles splitting, scheduling, moving data and failures."
+  steps={mrSteps} height="600vh" />
+
+<!-- WORD COUNT LAB -->
+<section class="chapter mrlab" id="mrlab" data-scene="funnel" data-chapter="Word count lab" data-part="6">
+  <div class="mr-head">
+    <div class="stack-v">
+      <p class="eyebrow">Interactive · word count</p>
+      <h2 class="h-display" data-split>Run a job <em>yourself.</em></h2>
+    </div>
+    <div class="stack-v">
+      <pre class="term mr-code"><span class="kw">map</span>(docId, text):
+  <span class="kw">for each</span> word <span class="kw">in</span> text: emit(word, <span class="num">1</span>)
+
+<span class="kw">reduce</span>(word, counts):
+  emit(word, sum(counts))</pre>
+    </div>
+  </div>
+  <div class="mr-ctl">
+    <label class="mr-in"><span>Input · one split per line (up to 4)</span><textarea id="mr-text" class="field" rows="4" spellcheck="false">map reduce maps data
+data needs shards and shards need data
+reduce the data</textarea></label>
+    <div class="stack-v">
+      <div class="seg" id="mr-r"><button type="button" data-r="2" class="on">2 reducers</button><button type="button" data-r="3">3 reducers</button></div>
+      <button type="button" class="btn" id="mr-comb" aria-pressed="false">Combiner: off</button>
+      <button type="button" class="btn solid" id="mr-run">Run job</button>
+    </div>
+  </div>
+  <div class="mr-board" id="mr-board">
+    <div class="mr-col"><h4>Map</h4><div id="mr-maps"></div></div>
+    <div class="mr-col"><h4>Shuffle · hash(word) mod R</h4><div id="mr-shuf"></div></div>
+    <div class="mr-col"><h4>Reduce · output</h4><div id="mr-reds"></div></div>
+  </div>
+  <div class="mr-stats"><div>Pairs emitted<b id="mr-e">0</b></div><div>Pairs sent over network<b id="mr-n">0</b></div><div>Distinct words<b id="mr-k">0</b></div></div>
+  <div class="mr-apps">
+    <p class="eyebrow">What MapReduce is used for</p>
+    <div class="tech-row">
+      <div><b>Distributed grep</b><p>Map emits matching lines; reduce passes them through.</p></div>
+      <div><b>URL access counts</b><p>Map reads web logs and emits (URL, 1); reduce sums, exactly like word count.</p></div>
+      <div><b>Reverse web-link graph</b><p>Map emits (target, source) for every link; reduce lists all pages pointing at a page.</p></div>
+      <div><b>Inverted index</b><p>Map emits (word, document id); reduce builds each word’s list of documents: the core of search.</p></div>
+      <div><b>Distributed sort</b><p>Map extracts the key; the framework’s sorted shuffle does the rest.</p></div>
+      <div><b>In NoSQL stores</b><p>Hadoop runs MapReduce over HDFS and HBase; CouchDB views are map/reduce functions. MongoDB’s mapReduce is deprecated since 5.0 in favour of its aggregation pipeline.</p></div>
+    </div>
+  </div>
+</section>

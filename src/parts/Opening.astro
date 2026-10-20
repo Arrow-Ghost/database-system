@@ -1,0 +1,43 @@
+---
+const team = [
+  ['Garapati Sai Aditya', '25BCE2449'],
+  ['Shrish Verma', '25BCE2542'],
+  ['Sreya Chandrasekharan', '25BCE2606'],
+  ['Annette Jose', '25BCE2635'],
+  ['Sahila Yazar Pottayil', '25BCE2642'],
+];
+---
+<!-- HERO -->
+<section class="chapter hero" id="top" data-scene="nebula" data-chapter="Module 05" data-part="0">
+  <div class="hero-inner">
+    <p class="eyebrow">BACSE202 · Database Systems · Module 5</p>
+    <h1 class="hero-title m5">
+      <span class="ht-small" data-split>Module 05</span>
+      <span class="ht-big" data-split>Distributed</span>
+      <span class="ht-big" data-split><span class="q">&amp;</span> <span class="q">No</span>SQL</span>
+    </h1>
+    <div class="hero-row">
+      <p class="hero-lede">Fragments, replicas, commit protocols, clusters, and four new kinds of database. The whole module in one scroll. <em>Scroll slowly.</em> Almost everything here answers back.</p>
+      <div class="hero-team">
+        {team.map(([n, r]) => <div><b>{n}</b><span>{r}</span></div>)}
+      </div>
+    </div>
+    <div class="scroll-cue">Scroll to begin <i></i></div>
+  </div>
+</section>
+
+<!-- MODULE MAP: scroll-morph cards -->
+<section class="chapter morph" id="map" data-scene="nebula" data-chapter="The map" data-part="0">
+  <div class="morph-pin" id="morph-pin">
+    <div class="morph-intro" id="morph-intro" aria-hidden="true">
+      <p class="morph-l1">Twenty ideas. One module.</p>
+      <p class="morph-l2">Keep scrolling</p>
+    </div>
+    <div class="morph-head" id="morph-head">
+      <p class="eyebrow">The map</p>
+      <h2 class="h-display">Explore <em>Module 05</em></h2>
+      <p class="body-copy">Every card is a stop on this page. Hover or tap to flip it, then press <b>Go</b> to jump straight there. Keep scrolling to fan through the deck.</p>
+    </div>
+    <div class="morph-stage" id="morph-stage" role="list" aria-label="Module 5 topics"></div>
+  </div>
+</section>

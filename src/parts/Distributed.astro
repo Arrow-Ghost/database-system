@@ -1,0 +1,339 @@
+---
+import FrameStage from './FrameStage.astro';
+import Marq from './Marq.astro';
+
+const txSteps = [
+  { from: 0, to: 0.24, color: '#9cc8ff', icon: '⇉', title: 'One transaction, many sites', label: 'Execute',
+    text: 'A transfer touches data at three sites. The <b>global transaction manager</b> at the site where it started becomes the <b>coordinator</b>. It sends each piece of work to the local transaction manager at a <b>participant</b> site, and each site does its part.' },
+  { from: 0.24, to: 0.5, color: '#ff8a1f', icon: '?', title: 'Phase 1 · Prepare', label: 'Vote',
+    text: 'The coordinator asks every participant: <b>can you commit?</b> Each one force-writes its log records to disk and replies <b>YES</b> (“ready to commit”). Any site that hit a problem replies <b>NO</b>. A YES is a promise: that site can now commit even if it crashes.' },
+  { from: 0.5, to: 0.76, color: '#9fdc8c', icon: '✓', title: 'Phase 2 · Decide', label: 'Commit',
+    text: 'If <b>every</b> vote is YES, the coordinator writes a commit record and sends <b>GLOBAL COMMIT</b>. If even one vote is NO, or a site does not answer in time, it sends <b>GLOBAL ABORT</b> and every site rolls back. Participants acknowledge, and the transaction ends.' },
+  { from: 0.76, to: 1.01, color: '#ff5a4e', icon: '⏸', title: 'The weak spot: blocking', label: 'Block',
+    text: 'If the coordinator crashes after participants voted YES, they cannot decide alone. They stay <b>in doubt</b>, holding their locks, until it recovers. <b>Three-phase commit</b> adds a pre-commit round so sites can finish without the coordinator, at the cost of more messages.' },
+];
+
+const dqpSteps = [
+  { from: 0, to: 0.25, color: '#9cc8ff', icon: '⟶', title: 'Query mapping', label: 'Map',
+    text: 'The SQL query is written against the <b>global conceptual schema</b>, as if the database were not distributed. It is translated into a relational algebra query, then normalised and simplified. Fragments are not considered yet.' },
+  { from: 0.25, to: 0.5, color: '#d8c7ff', icon: '⋔', title: 'Localization', label: 'Localize',
+    text: 'Using the fragmentation and replication information, every global relation is replaced by the fragments that build it, for example <b>EMPLOYEE = EMP_D1 ∪ EMP_D4 ∪ EMP_D5</b>. Fragments that cannot contribute are pruned.' },
+  { from: 0.5, to: 0.76, color: '#ff8a1f', icon: '⚖', title: 'Global optimization', label: 'Optimize',
+    text: 'The optimizer compares candidate strategies and picks the cheapest. Cost combines CPU, disk I/O and communication, and in a distributed system <b>communication usually dominates</b>. So the best plan is often the one that moves the fewest bytes.' },
+  { from: 0.76, to: 1.01, color: '#9fdc8c', icon: '⚙', title: 'Local optimization', label: 'Execute',
+    text: 'Each site receives its piece of the plan and optimizes it like an ordinary centralized query, choosing its own indexes and join methods. Partial results travel to the result site, where the answer is assembled.' },
+];
+---
+<Marq n="01" t="Distributed" dir={1} />
+
+<!-- DDB INTRO -->
+<section class="chapter ddb" id="ddb" data-scene="sites" data-chapter="Distributed DB" data-part="1">
+  <div class="ddb-head">
+    <div class="stack-v">
+      <p class="eyebrow">Distributed databases</p>
+      <h2 class="h-display" data-split>Many sites. <em>One database.</em></h2>
+    </div>
+    <div class="stack-v">
+      <p class="lede">A <em>distributed database</em> is a collection of logically related databases spread over a computer network.</p>
+      <p class="body-copy">The <strong>distributed DBMS</strong> (DDBMS) manages it and hides the distribution, so users query it like one database. Three conditions make a database distributed: <strong>several sites connected by a network</strong>, databases at those sites that are <strong>logically interrelated</strong>, and sites that <strong>do not have to be identical</strong> in hardware, operating system or even DBMS.</p>
+    </div>
+  </div>
+
+  <div class="ddb-grid">
+    <article class="panel ddb-net">
+      <div class="panel-head"><span>A bank with four branches · try it</span><span class="tag" id="ddb-tag">Transparent</span></div>
+      <div class="panel-body">
+        <svg class="ddb-svg" id="ddb-svg" viewBox="0 0 560 330" role="img" aria-label="Four bank branch sites connected by a network, with a distributed DBMS layer"></svg>
+        <div class="btn-row" id="ddb-q">
+          <button type="button" class="btn on" data-q="local">Balance of A-102</button>
+          <button type="button" class="btn" data-q="all">Total deposits, all branches</button>
+          <button type="button" class="btn" data-q="move">Transfer Chennai → Delhi</button>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn" id="ddb-transp" aria-pressed="true">Transparency: on</button>
+          <button type="button" class="btn" id="ddb-fail">Take Mumbai offline</button>
+          <button type="button" class="btn" id="ddb-rep" aria-pressed="false">Replicate Mumbai at Delhi: off</button>
+        </div>
+        <pre class="term ddb-sql" id="ddb-sql"></pre>
+        <div class="ddb-stats"><div>Sites contacted<b id="ddb-s">0</b></div><div>Messages<b id="ddb-m">0</b></div><div>Outcome<b id="ddb-o">—</b></div></div>
+      </div>
+    </article>
+    <div class="ddb-side">
+      <div class="mini-cards">
+        <div><b>Transparency</b><p>Users need not know <strong>where</strong> data lives (location), <strong>what it is called</strong> at each site (naming), how many <strong>copies</strong> exist (replication), or how a table was <strong>split</strong> (fragmentation).</p></div>
+        <div><b>Reliability vs availability</b><p><strong>Reliability</strong>: the probability the system is running at a given moment. <strong>Availability</strong>: the probability it stays continuously available over a time interval. Replicated data keeps both high when one site fails.</p></div>
+        <div><b>Performance</b><p>Data is kept close to the people who use it most (data localization). Queries touch fewer, smaller databases, and different sites work in parallel.</p></div>
+        <div><b>Easier expansion</b><p>Need more capacity? Add a site and move some data to it, instead of replacing one central machine.</p></div>
+      </div>
+      <p class="note">Toggle transparency to see the query a user would have to write without a DDBMS. Then take a branch offline and replicate its data.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TYPES -->
+<section class="chapter ddbt" id="ddb-types" data-chapter="Types of DDBMS" data-part="1">
+  <div class="stack-v" style="max-width:980px">
+    <p class="eyebrow">Types of distributed database systems</p>
+    <h2 class="h-display" data-split>Same software, or <em>a federation?</em></h2>
+    <p class="body-copy">Systems are classified by how <strong>distributed</strong> they are, how <strong>alike</strong> the sites are (homogeneity) and how much each site may act on its own (<strong>local autonomy</strong>). A <strong>homogeneous</strong> system runs the same DBMS at every site; a <strong>heterogeneous</strong> one mixes products, data models or query languages.</p>
+  </div>
+  <div class="ddbt-grid">
+    <div class="ddbt-tabs" role="tablist" aria-label="Kinds of system">
+      <button type="button" role="tab" class="ddbt-tab on" data-k="central"><span>A</span>Centralized DBMS</button>
+      <button type="button" role="tab" class="ddbt-tab" data-k="pure"><span>B</span>Pure distributed DBMS</button>
+      <button type="button" role="tab" class="ddbt-tab" data-k="fed"><span>C</span>Federated DBMS</button>
+      <button type="button" role="tab" class="ddbt-tab" data-k="multi"><span>D</span>Multidatabase system</button>
+    </div>
+    <article class="panel ddbt-stage">
+      <div class="panel-head"><span id="ddbt-k">Centralized</span><span class="dots"><i></i><i></i><i></i></span></div>
+      <div class="panel-body">
+        <svg class="ddbt-svg" id="ddbt-svg" viewBox="0 0 520 250" role="img" aria-label="Diagram of the selected kind of database system"></svg>
+        <div class="ddbt-axes">
+          <div><span>Distribution</span><i><b id="ax-d"></b></i></div>
+          <div><span>Heterogeneity</span><i><b id="ax-h"></b></i></div>
+          <div><span>Local autonomy</span><i><b id="ax-a"></b></i></div>
+        </div>
+        <p class="body-copy" id="ddbt-p"></p>
+      </div>
+    </article>
+  </div>
+  <p class="note">Heterogeneity causes real work in federated systems: different data models, constraints and query languages, and <b>semantic heterogeneity</b>, where the same name means different things at different sites. Autonomy can cover design, communication, execution and association.</p>
+</section>
+
+<!-- ARCHITECTURES -->
+<section class="chapter arch" id="arch" data-scene="tower" data-chapter="Architectures" data-part="1">
+  <div class="arch-head">
+    <div class="stack-v">
+      <p class="eyebrow">Distributed database architectures</p>
+      <h2 class="h-display" data-split>What do the machines <em>share?</em></h2>
+    </div>
+    <p class="body-copy">Parallel systems are grouped by which resources the processors share. A <strong>shared-nothing</strong> machine looks like a distributed database, with one difference: its nodes are identical and sit in one room, while a distributed database often mixes hardware and operating systems across a network.</p>
+  </div>
+  <div class="arch-grid">
+    <article class="panel">
+      <div class="panel-head"><span>Parallel architectures</span><div class="seg" id="par-seg"><button type="button" class="on" data-a="mem">Shared memory</button><button type="button" data-a="disk">Shared disk</button><button type="button" data-a="none">Shared nothing</button></div></div>
+      <div class="panel-body">
+        <svg class="par-svg" id="par-svg" viewBox="0 0 520 260" role="img" aria-label="Processors, memory and disks in the selected architecture"></svg>
+        <p class="body-copy" id="par-p"></p>
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-head"><span>Schema architecture · click a layer</span><span class="dots"><i></i><i></i><i></i></span></div>
+      <div class="panel-body">
+        <div class="layers" id="layers">
+          <button type="button" class="ly" data-l="users"><b>Global users</b><span>see external views</span></button>
+          <button type="button" class="ly gl on" data-l="gcs"><b>Global conceptual schema</b><span>GCS · one logical database</span></button>
+          <div class="ly-row">
+            <button type="button" class="ly" data-l="lcs"><b>LCS</b><span>site 1</span></button>
+            <button type="button" class="ly" data-l="lcs"><b>LCS</b><span>site 2</span></button>
+            <button type="button" class="ly" data-l="lcs"><b>LCS</b><span>site n</span></button>
+          </div>
+          <div class="ly-row">
+            <button type="button" class="ly" data-l="lis"><b>LIS</b><span>storage</span></button>
+            <button type="button" class="ly" data-l="lis"><b>LIS</b><span>storage</span></button>
+            <button type="button" class="ly" data-l="lis"><b>LIS</b><span>storage</span></button>
+          </div>
+        </div>
+        <p class="body-copy" id="layer-p"></p>
+      </div>
+    </article>
+  </div>
+  <div class="tier3">
+    <p class="eyebrow">Three-tier client-server</p>
+    <div class="tier-row">
+      <div class="tier"><span class="n">1</span><b>Presentation</b><p>Web pages or app screens. Shows data, collects input.</p></div>
+      <i class="tier-wire"><em></em></i>
+      <div class="tier"><span class="n">2</span><b>Application</b><p>Business logic. Builds queries, splits them into subqueries for different sites using the global data dictionary, and combines the results.</p></div>
+      <i class="tier-wire"><em></em></i>
+      <div class="tier"><span class="n">3</span><b>Database servers</b><p>Run local queries and transactions, and return results. In a DDBMS this layer spans many sites.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FRAGMENTATION -->
+<section class="chapter frag" id="frag" data-scene="slices" data-chapter="Fragmentation" data-part="1">
+  <div class="frag-head">
+    <div class="stack-v">
+      <p class="eyebrow">Data fragmentation</p>
+      <h2 class="h-display" data-split>Cut the table. <em>Keep the meaning.</em></h2>
+    </div>
+    <div class="stack-v">
+      <p class="body-copy">A relation can be split into <strong>fragments</strong> stored at different sites. <strong>Horizontal</strong> fragments are subsets of rows chosen with a selection (σ). <strong>Vertical</strong> fragments are subsets of columns chosen with a projection (π), and every one must keep the <strong>primary key</strong>. <strong>Mixed</strong> fragmentation does both.</p>
+      <p class="body-copy">Data: the EMPLOYEE table from the textbook COMPANY database.</p>
+    </div>
+  </div>
+  <div class="frag-ctl">
+    <div class="seg big" id="frag-mode">
+      <button type="button" class="on" data-m="whole">Whole table</button>
+      <button type="button" data-m="h">Horizontal</button>
+      <button type="button" data-m="v">Vertical</button>
+      <button type="button" data-m="mix">Mixed</button>
+    </div>
+    <label class="frag-err">Introduce a mistake
+      <select id="frag-err" class="field">
+        <option value="none">None, fragment correctly</option>
+        <option value="miss">Forget a predicate (lose Dno = 1)</option>
+        <option value="overlap">Overlapping predicates</option>
+        <option value="nokey">Vertical fragment without Ssn</option>
+      </select>
+    </label>
+  </div>
+  <div class="frag-grid">
+    <div class="frag-stage" id="frag-stage" aria-live="polite"></div>
+    <aside class="panel frag-side">
+      <div class="panel-head"><span>Relational algebra</span><span class="tag" id="frag-tag">1 relation</span></div>
+      <div class="panel-body">
+        <pre class="term frag-alg" id="frag-alg"></pre>
+        <div class="checks" id="frag-checks">
+          <div data-c="complete"><i></i><b>Completeness</b><span>Every row (and every column) lands in some fragment.</span></div>
+          <div data-c="recon"><i></i><b>Reconstruction</b><span>The original relation can be rebuilt: UNION for horizontal, JOIN on the key for vertical.</span></div>
+          <div data-c="disjoint"><i></i><b>Disjointness</b><span>No row sits in two horizontal fragments. Vertical fragments share only the key.</span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+  <p class="note"><b>Derived horizontal fragmentation:</b> a related table such as WORKS_ON or DEPENDENT can be split the same way as its owner, using a semijoin with the EMPLOYEE fragment, so an employee and their projects end up at the same site. The <b>fragmentation schema</b> lists every fragment; the <b>allocation schema</b> says where each one is stored.</p>
+</section>
+
+<!-- REPLICATION & ALLOCATION -->
+<section class="chapter alloc" id="alloc" data-scene="sites" data-chapter="Replication and allocation" data-part="1">
+  <div class="alloc-head">
+    <div class="stack-v">
+      <p class="eyebrow">Replication and allocation</p>
+      <h2 class="h-display" data-split>Where does each <em>fragment</em> live?</h2>
+    </div>
+    <div class="stack-v">
+      <p class="body-copy"><strong>Allocation</strong> assigns each fragment, or each copy of a fragment, to a site. Keeping more than one copy is <strong>replication</strong>. The three folders below are the three company sites. Open one to see what it stores, press <b>+</b> to drop in another replica, or switch the whole strategy.</p>
+    </div>
+  </div>
+  <div class="alloc-ctl">
+    <div class="seg big" id="alloc-mode">
+      <button type="button" data-s="none">No replication</button>
+      <button type="button" class="on" data-s="partial">Partial replication</button>
+      <button type="button" data-s="full">Full replication</button>
+    </div>
+  </div>
+  <div class="alloc-folders" id="alloc-folders"></div>
+  <div class="alloc-grid">
+    <article class="panel">
+      <div class="panel-head"><span>Workload · reads mostly local, some updates</span><span class="dots"><i></i><i></i><i></i></span></div>
+      <div class="panel-body alloc-meters">
+        <div><span>Copies stored</span><b id="al-copies">0</b><em id="al-copies-x"></em></div>
+        <div><span>Reads served locally</span><b id="al-local">0%</b><i class="bar"><u id="al-local-bar"></u></i></div>
+        <div><span>Sites written per update</span><b id="al-upd">0</b><i class="bar"><u id="al-upd-bar"></u></i></div>
+        <div><span>Fragments reachable</span><b id="al-avail">0 / 4</b><i class="bar"><u id="al-avail-bar"></u></i></div>
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-head"><span id="al-info-k">Selected fragment</span><span class="tag" id="al-info-tag">—</span></div>
+      <div class="panel-body stack-v">
+        <p class="body-copy" id="al-info">Open a folder and pick a file to see where its other copies live.</p>
+        <div class="btn-row" id="al-info-btns"></div>
+      </div>
+    </article>
+  </div>
+  <div class="alloc-explain">
+    <div><b>Full replication</b><p>Every site stores the whole database. Reads are fast and survive failures, but every update must reach every site, and concurrency control and recovery get expensive.</p></div>
+    <div><b>No replication</b><p>Each fragment is stored exactly once (non-redundant allocation). Updates are cheap, but a site failure makes its fragments unavailable.</p></div>
+    <div><b>Partial replication</b><p>Some fragments are copied, others are not. The <strong>replication schema</strong> records the choice, which depends on how often each fragment is read and updated, and from where.</p></div>
+  </div>
+</section>
+
+<!-- 2PC -->
+<FrameStage id="tx" chapter="Two-phase commit" scene="sites" part="1" draw="tpc"
+  eyebrow="Distributed transactions"
+  title="Two-phase <em>commit</em>"
+  sub="A distributed transaction must commit at every site or at none. Scroll to step through the protocol, frame by frame."
+  steps={txSteps}>
+  <div class="fs-scen" id="tpc-scen" role="group" aria-label="Scenario">
+    <button type="button" class="btn on" data-sc="commit">All vote YES</button>
+    <button type="button" class="btn" data-sc="abort">Site 3 votes NO</button>
+    <button type="button" class="btn" data-sc="crash">Coordinator crashes</button>
+  </div>
+</FrameStage>
+
+<!-- CONCURRENCY + RECOVERY -->
+<section class="chapter cc" id="cc" data-scene="ring" data-chapter="Concurrency and recovery" data-part="1">
+  <div class="cc-head">
+    <div class="stack-v">
+      <p class="eyebrow">Distributed concurrency control and recovery</p>
+      <h2 class="h-display" data-split>Who hands out <em>the locks?</em></h2>
+    </div>
+    <ol class="cc-problems">
+      <li><b>Multiple copies</b><span>Every copy of an item must stay consistent, and a site that was down must catch up.</span></li>
+      <li><b>Site failures</b><span>The system should keep working with the sites that are still up.</span></li>
+      <li><b>Link failures</b><span>A broken link can split the network into partitions that cannot talk to each other.</span></li>
+      <li><b>Distributed commit</b><span>A transaction may succeed at some sites and fail at others. Two-phase commit handles this.</span></li>
+      <li><b>Distributed deadlock</b><span>Transactions at different sites can wait for each other in a cycle no single site can see.</span></li>
+    </ol>
+  </div>
+  <div class="cc-grid">
+    <article class="panel">
+      <div class="panel-head"><span>Lock manager placement</span><div class="seg" id="cc-seg"><button type="button" class="on" data-t="primary">Primary site</button><button type="button" data-t="backup">+ Backup site</button><button type="button" data-t="copy">Primary copy</button><button type="button" data-t="vote">Voting</button></div></div>
+      <div class="panel-body cc-body">
+        <svg class="cc-svg" id="cc-svg" viewBox="0 0 560 300" role="img" aria-label="Four sites with copies of items X and Y and lock messages"></svg>
+        <div class="btn-row">
+          <button type="button" class="btn solid" id="cc-lx">T1 locks X</button>
+          <button type="button" class="btn" id="cc-ly">T2 locks Y</button>
+          <button type="button" class="btn" id="cc-fail">Fail site 1</button>
+          <button type="button" class="btn" id="cc-reset">Reset</button>
+        </div>
+        <div class="lab-result" id="cc-out"></div>
+      </div>
+    </article>
+    <aside class="cc-side">
+      <div class="cc-tech" id="cc-tech"></div>
+      <div class="panel dl">
+        <div class="panel-head"><span>Distributed deadlock</span><span class="tag" id="dl-tag">No cycle seen</span></div>
+        <div class="panel-body">
+          <svg class="dl-svg" id="dl-svg" viewBox="0 0 420 170" role="img" aria-label="Wait-for graphs at site A and site B"></svg>
+          <div class="btn-row"><button type="button" class="btn" id="dl-merge">Combine wait-for graphs</button><button type="button" class="btn" id="dl-abort" disabled>Abort T2 as victim</button></div>
+          <p class="note" id="dl-note">Each site sees only its own edges, so neither finds a cycle.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+  <p class="note"><b>Recovery:</b> every site keeps its own log. When a site restarts it must find out what was decided for transactions it took part in, and two-phase commit records make that possible. If the coordinator site itself fails, the remaining sites run an <b>election</b> to choose a new one.</p>
+</section>
+
+<!-- QUERY PROCESSING -->
+<FrameStage id="dqp" chapter="Query processing" scene="grid" part="1" draw="dqp"
+  eyebrow="Distributed query processing"
+  title="From SQL to <em>sites</em>"
+  sub="A query on the global schema becomes a plan that runs at several sites. Scroll through the four stages."
+  steps={dqpSteps} height="480vh" />
+
+<!-- TRANSFER COST LAB -->
+<section class="chapter cost" id="cost" data-scene="sites" data-chapter="Transfer cost lab" data-part="1">
+  <div class="cost-head">
+    <div class="stack-v">
+      <p class="eyebrow">Data transfer cost · the textbook example</p>
+      <h2 class="h-display" data-split>Move the <em>small</em> table.</h2>
+    </div>
+    <div class="stack-v">
+      <p class="body-copy">EMPLOYEE lives at site 1: <strong>10,000 rows × 100 bytes = 1,000,000 bytes</strong>. DEPARTMENT lives at site 2: <strong>100 rows × 35 bytes = 3,500 bytes</strong>. The query arrives at a result site. Every strategy gives the same answer but moves a very different number of bytes.</p>
+    </div>
+  </div>
+  <div class="cost-grid">
+    <article class="panel cost-stage">
+      <div class="panel-head"><span id="cost-head">Q at site 3</span><span class="tag kv" id="cost-total">0 bytes</span></div>
+      <div class="panel-body">
+        <svg class="cost-svg" id="cost-svg" viewBox="0 0 560 330" role="img" aria-label="Three sites and the data moved between them"></svg>
+        <pre class="term" id="cost-log" style="min-height:4.6em"></pre>
+      </div>
+    </article>
+    <aside class="cost-ctl stack-v">
+      <fieldset class="chips-set"><legend>Query</legend><div class="chips">
+        <input type="radio" name="cq" id="cq1" value="Q" checked /><label for="cq1">Q · each employee + their department name</label>
+        <input type="radio" name="cq" id="cq2" value="Q2" /><label for="cq2">Q′ · each department + its manager’s name</label>
+      </div></fieldset>
+      <fieldset class="chips-set"><legend>Result needed at</legend><div class="chips">
+        <input type="radio" name="cs" id="cs3" value="3" checked /><label for="cs3">Site 3 (neither table)</label>
+        <input type="radio" name="cs" id="cs2" value="2" /><label for="cs2">Site 2 (DEPARTMENT)</label>
+      </div></fieldset>
+      <div class="cost-strats" id="cost-strats"></div>
+      <button type="button" class="btn solid" id="cost-run">Run this strategy</button>
+      <p class="note">Result rows are 40 bytes (first name, last name, department name). Q returns 10,000 rows, Q′ only 100. CPU and disk costs are ignored here because shipping data usually costs far more.</p>
+    </aside>
+  </div>
+</section>

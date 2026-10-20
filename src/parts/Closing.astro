@@ -1,0 +1,136 @@
+---
+import Marq from './Marq.astro';
+const team = [
+  ['Garapati Sai Aditya', '25BCE2449'],
+  ['Shrish Verma', '25BCE2542'],
+  ['Sreya Chandrasekharan', '25BCE2606'],
+  ['Annette Jose', '25BCE2635'],
+  ['Sahila Yazar Pottayil', '25BCE2642'],
+];
+---
+<Marq n="08" t="Conclusion" dir={-1} />
+
+<!-- CONCLUSION -->
+<section class="chapter conc" id="conclusion" data-scene="nodes" data-chapter="Conclusion" data-part="8">
+  <div class="stack-v" style="max-width:980px">
+    <p class="eyebrow">In conclusion</p>
+    <h2 class="h-display" data-split>Pick the right tool <em>for the job.</em></h2>
+    <p class="body-copy">There is no perfect database, relational or NoSQL. Every one has advantages and disadvantages that depend on the task. NoSQL is a set of concepts, ideas, technologies and software for big data, sparse semi-structured data, horizontal scale and massively parallel processing, and different applications need different NoSQL solutions.</p>
+  </div>
+  <div class="scales">
+    <article class="scale-pan rdb">
+      <span class="tag sql">RDBMS</span>
+      <h3>When data must be <em>right</em></h3>
+      <ul><li>Solving ACID problems</li><li>Data validity is super important</li><li>You need dynamic, ad hoc queries and reports</li></ul>
+    </article>
+    <div class="scale-beam" aria-hidden="true"><i></i></div>
+    <article class="scale-pan nos">
+      <span class="tag kv">NoSQL</span>
+      <h3>When data must be <em>available</em></h3>
+      <ul><li>Solving data availability problems</li><li>Fast data matters more than perfectly current data</li><li>You must scale as requirements change</li></ul>
+    </article>
+  </div>
+  <div class="dba">
+    <div class="dba-pager" aria-hidden="true"><span>02:00</span><b>node-3 out of sync</b><em>checksum mismatch on shard B</em></div>
+    <div class="stack-v">
+      <p class="eyebrow">Don’t forget the DBA</p>
+      <h3 class="h-sub">Who you gonna <em>call?</em></h3>
+      <p class="body-copy">Moving data to NoSQL does not remove the operations work. Someone still owns <strong>backups and recovery</strong>, <strong>capacity planning</strong>, <strong>performance monitoring</strong>, <strong>data integration</strong> and <strong>tuning</strong>. When nodes fall out of sync or data corrupts at 2 a.m., the DBA and the system administrator need to be on board.</p>
+    </div>
+  </div>
+  <div class="summary-quote">
+    <p>“Not every problem is a nail, and not every solution is a hammer.”</p>
+    <span>From the module summary. Most data is still stored in relational databases; the biggest NoSQL users are social networks such as Twitter, Facebook and LinkedIn. And NoSQL brought database development, a field some had called dead, back to life.</span>
+  </div>
+</section>
+    <!-- 19 RECAP -->
+    <section class="chapter recap" id="recap" data-scene="nebula" data-chapter="Recap and quiz" data-part="8">
+      <div style="display:grid;gap:20px;max-width:900px">
+        <p class="eyebrow">Recap</p>
+        <h2 class="h-display" data-split>Seven things to <em>keep.</em></h2>
+      </div>
+      <div class="recap-rows">
+        <div class="rrow"><span class="n">01</span><h3>Distributed DBs</h3><p>Logically related databases at several sites, managed by a DDBMS that makes distribution transparent. Homogeneous or heterogeneous, federated or multidatabase; shared-nothing hardware; global and local schemas.</p></div>
+        <div class="rrow"><span class="n">02</span><h3>Fragments and copies</h3><p>Horizontal fragments by selection, vertical by projection (keep the key), or mixed; check completeness, reconstruction and disjointness. Allocate with no, partial or full replication.</p></div>
+        <div class="rrow"><span class="n">03</span><h3>Transactions and queries</h3><p>Two-phase commit: prepare, then commit or abort; it blocks if the coordinator fails. Locks via primary site, primary copy or voting. Query plans minimise data transfer; semijoins ship only join columns.</p></div>
+        <div class="rrow"><span class="n">04</span><h3>Why NoSQL</h3><p>Big, fast, sparse, semi-structured internet data and the need to scale out. Traits: horizontal scaling, replication, sharding, hashing or range access, no fixed schema, simple CRUD APIs, versioning.</p></div>
+        <div class="rrow"><span class="n">05</span><h3>CAP, ACID, BASE</h3><p>Under a partition, choose consistency or availability. ACID is strict and pessimistic; BASE is basically available, soft state, eventually consistent. Quorums with R + W &gt; N tune the balance.</p></div>
+        <div class="rrow"><span class="n">06</span><h3>Modelling and MapReduce</h3><p>Aggregates are the unit of storage and consistency; embed or reference. Distribute by sharding, master-slave or peer-to-peer replication. MapReduce splits, maps, shuffles and reduces.</p></div>
+        <div class="rrow"><span class="n">07</span><h3>Four types</h3><p>Key-value, document, column family and graph, each with its sweet spot, usually running next to a relational database.</p></div>
+      </div>
+      <div class="quiz-wrap" id="quiz-wrap">
+        <article class="panel quiz" id="quiz">
+          <div class="panel-head"><span>Check yourself · 12 questions</span><span class="tag" id="lb-mode">This device</span></div>
+          <div class="panel-body">
+            <form class="qz-join" id="qz-join" autocomplete="off">
+              <p class="quiz-q">Put your name on the board.</p>
+              <p class="body-copy">Twelve questions across the whole module. Every answer is recorded, the clock runs from the first question, and ties go to the faster player.</p>
+              <div class="qz-row">
+                <label class="sr" for="qz-name">Your name</label>
+                <input class="field" id="qz-name" maxlength="24" placeholder="Your name" spellcheck="false" />
+                <button class="btn solid" type="submit">Start quiz</button>
+              </div>
+              <p class="note" id="qz-join-msg">Tip: answer with keys A–D, press Enter for the next question.</p>
+            </form>
+            <div class="qz-play" id="qz-play" hidden>
+              <div class="quiz-top"><span id="quiz-pos">Question 1 of 12</span><span class="qz-player" id="qz-player"></span><span>Time <b id="qz-time">0.0s</b></span><span>Score <b id="quiz-score">0</b></span></div>
+              <div class="qz-dots" id="qz-dots" aria-hidden="true"></div>
+              <p class="quiz-q" id="quiz-q"></p>
+              <div class="quiz-opts" id="quiz-opts"></div>
+              <p class="quiz-why" id="quiz-why">Pick an answer.</p>
+              <div class="quiz-foot"><span class="note" id="quiz-note"></span><button type="button" class="btn solid" id="quiz-next" disabled>Next question</button></div>
+            </div>
+            <div class="qz-result" id="qz-result" hidden>
+              <div class="qz-score"><span class="qz-big" id="qz-final">0/12</span><div class="qz-score-txt"><p class="quiz-q" id="qz-verdict"></p><p class="note" id="qz-rank"></p></div></div>
+              <ol class="qz-review" id="qz-review"></ol>
+              <div class="btn-row"><button type="button" class="btn solid" id="qz-again">Next player</button><button type="button" class="btn" id="qz-retry">Try again</button></div>
+            </div>
+          </div>
+        </article>
+        <aside class="panel lb" id="lb" aria-live="polite">
+          <div class="panel-head"><span>Leaderboard</span><span id="lb-count">0 players</span></div>
+          <div class="panel-body">
+            <ol class="lb-list" id="lb-list"></ol>
+            <p class="note" id="lb-note">No scores yet. Be the first.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+<!-- FINALE -->
+<section class="chapter finale" id="fin" data-scene="text" data-chapter="Fin" data-part="8">
+  <div class="fin-sticky">
+    <h2 class="fin-title">Thank you.<br /><em>Questions?</em></h2>
+    <div class="fin-row">
+      <p class="body-copy">Distributed databases taught us to split data, copy it and coordinate every change. NoSQL asked which of those guarantees we could relax. Pick the model that matches the shape of your data and the questions you will ask of it.</p>
+      <div class="hero-team">
+        {team.map(([n, r]) => <div><b>{n}</b><span>{r}</span></div>)}
+      </div>
+    </div>
+  </div>
+</section>
+<section class="chapter sources">
+  <p class="eyebrow">Sources</p>
+  <ol>
+    <li>R. Elmasri and S. B. Navathe, <i>Fundamentals of Database Systems</i>, 7th ed., Pearson: distributed databases and NoSQL chapters (course textbook), and the Module 5 course slides.</li>
+    <li>P. J. Sadalage and M. Fowler, <a href="https://martinfowler.com/books/nosql.html" target="_blank" rel="noopener">NoSQL Distilled</a>, Addison-Wesley, 2012: aggregate data models and distribution models.</li>
+    <li>J. Dean and S. Ghemawat, <a href="https://research.google/pubs/mapreduce-simplified-data-processing-on-large-clusters/" target="_blank" rel="noopener">MapReduce: Simplified Data Processing on Large Clusters</a>, OSDI 2004.</li>
+    <li>Ghemawat, Gobioff and Leung, <a href="https://research.google/pubs/the-google-file-system/" target="_blank" rel="noopener">The Google File System</a>, SOSP 2003.</li>
+    <li>Chang et al., <a href="https://research.google/pubs/bigtable-a-distributed-storage-system-for-structured-data/" target="_blank" rel="noopener">Bigtable: A Distributed Storage System for Structured Data</a>, OSDI 2006.</li>
+    <li>DeCandia et al., <a href="https://www.allthingsdistributed.com/2007/10/amazons_dynamo.html" target="_blank" rel="noopener">Dynamo: Amazon’s Highly Available Key-value Store</a>, SOSP 2007.</li>
+    <li>E. Brewer, <a href="https://people.eecs.berkeley.edu/~brewer/cs262b-2004/PODC-keynote.pdf" target="_blank" rel="noopener">Towards Robust Distributed Systems</a>, PODC keynote, 2000 (CAP, ACID vs BASE).</li>
+    <li>Gilbert and Lynch, <a href="https://www.comp.nus.edu.sg/~gilbert/pubs/BrewersConjecture-SigAct.pdf" target="_blank" rel="noopener">Brewer’s Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services</a>, 2002.</li>
+    <li>D. Pritchett, <a href="https://queue.acm.org/detail.cfm?id=1394128" target="_blank" rel="noopener">BASE: An Acid Alternative</a>, ACM Queue, 2008.</li>
+    <li>E. F. Codd, <a href="https://doi.org/10.1145/362384.362685" target="_blank" rel="noopener">A Relational Model of Data for Large Shared Data Banks</a>, CACM, 1970.</li>
+    <li>I. Katsov, <a href="https://highlyscalable.wordpress.com/2012/03/01/nosql-data-modeling-techniques/" target="_blank" rel="noopener">NoSQL Data Modeling Techniques</a>, 2012.</li>
+    <li>M. Fowler, <a href="https://martinfowler.com/bliki/PolyglotPersistence.html" target="_blank" rel="noopener">Polyglot Persistence</a> and <a href="https://martinfowler.com/bliki/AggregateOrientedDatabase.html" target="_blank" rel="noopener">Aggregate Oriented Database</a>.</li>
+    <li><a href="https://www.mongodb.com/docs/manual/core/transactions/" target="_blank" rel="noopener">MongoDB transactions</a>, <a href="https://www.mongodb.com/docs/manual/core/schema-validation/" target="_blank" rel="noopener">schema validation</a> and <a href="https://www.mongodb.com/docs/manual/core/map-reduce/" target="_blank" rel="noopener">map-reduce</a>, MongoDB manual.</li>
+    <li><a href="https://cassandra.apache.org/doc/latest/" target="_blank" rel="noopener">Apache Cassandra documentation</a>, <a href="https://redis.io/docs/latest/commands/" target="_blank" rel="noopener">Redis commands</a>, <a href="https://neo4j.com/docs/cypher-manual/current/" target="_blank" rel="noopener">Neo4j Cypher manual</a>.</li>
+    <li><a href="https://engineering.fb.com/2010/11/15/core-infra/the-underlying-technology-of-messages/" target="_blank" rel="noopener">The Underlying Technology of Messages</a>, Facebook Engineering, 2010.</li>
+    <li><a href="https://netflixtechblog.com/scaling-time-series-data-storage-part-i-ec2b6d44ba39" target="_blank" rel="noopener">Scaling Time Series Data Storage, Part I</a>, Netflix Tech Blog.</li>
+    <li><a href="https://discord.com/blog/how-discord-stores-billions-of-messages" target="_blank" rel="noopener">How Discord Stores Billions of Messages</a> (2017) and <a href="https://discord.com/blog/how-discord-stores-trillions-of-messages" target="_blank" rel="noopener">Trillions</a> (2023).</li>
+    <li><a href="https://engineering.linkedin.com/voldemort/announcing-voldemort-160-open-source-release" target="_blank" rel="noopener">Project Voldemort</a>, LinkedIn Engineering.</li>
+    <li><a href="https://en.wikipedia.org/wiki/NoSQL" target="_blank" rel="noopener">NoSQL</a>, Wikipedia: history of the term (Strozzi 1998, 2009 meetup).</li>
+  </ol>
+  <div class="colophon"><span></span><button type="button" class="btn" data-jump="0">Back to top ↑</button></div>
+</section>

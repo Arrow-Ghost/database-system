@@ -1,0 +1,90 @@
+---
+import Marq from './Marq.astro';
+---
+<Marq n="03" t="Characteristics" dir={1} />
+
+<!-- CHARACTERISTICS -->
+<section class="chapter traits" id="traits" data-scene="nodes" data-chapter="Characteristics" data-part="3">
+  <div class="traits-head">
+    <div class="stack-v">
+      <p class="eyebrow">Characteristics of NoSQL systems</p>
+      <h2 class="h-display" data-split>Eight traits, <em>two families.</em></h2>
+    </div>
+    <p class="body-copy">Most NoSQL systems are <strong>distributed databases or distributed storage systems</strong>. Their characteristics fall into two groups: those that come from being distributed, and those about the data model and query language.</p>
+  </div>
+  <div class="traits-board">
+    <div class="tgroup">
+      <h3><span>A</span>From distributed systems</h3>
+      <article class="trait"><i>01</i><b>Scalability</b><p>Usually <strong>horizontal</strong>: add nodes for storage and processing as data grows, often while the system keeps running. Vertical scaling would instead expand the storage and computing power of existing nodes.</p></article>
+      <article class="trait"><i>02</i><b>Availability and replication</b><p>Data is copied to two or more nodes transparently. Reads can use any copy. Writes are harder, because every copy must be updated, so many systems settle for <strong>eventual consistency</strong>.</p></article>
+      <article class="trait"><i>03</i><b>Replication models</b><p><strong>Master-slave</strong>: writes go to the master copy and then propagate; reads can use any copy, but a slave may be behind. <strong>Master-master</strong>: any replica accepts reads and writes, and conflicts are reconciled later.</p></article>
+      <article class="trait"><i>04</i><b>Sharding</b><p><strong>Horizontal partitioning</strong> of the records across nodes, so the load of accessing them is spread out (load balancing). Combined with replication for availability.</p></article>
+      <article class="trait"><i>05</i><b>High-performance access</b><p>Find an object by key fast. With <strong>hashing</strong>, a hash function h(K) gives the location. With <strong>range partitioning</strong>, location i holds the keys with K<sub>i,min</sub> ≤ K ≤ K<sub>i,max</sub>. Try both below.</p></article>
+    </div>
+    <div class="tgroup">
+      <h3><span>B</span>From the data model</h3>
+      <article class="trait"><i>06</i><b>Not requiring a schema</b><p>Records are semi-structured and self-describing, often JSON or XML. Constraints, if any, live in the application.</p></article>
+      <article class="trait"><i>07</i><b>Less powerful query languages</b><p>Many apps only need <strong>CRUD</strong>: create, read, update, delete (or <strong>SCRUD</strong>, adding search). So many systems offer a simple API instead of full SQL, often without joins.</p></article>
+      <article class="trait"><i>08</i><b>Versioning</b><p>Some systems keep <strong>several versions</strong> of a data item, each stamped with the time it was written. Bigtable and HBase do this per cell.</p></article>
+      <div class="avoid">
+        <div><b>NoSQL avoids</b><span>the overhead of ACID transactions · the complexity of SQL queries · the burden of up-front schema design · transactions handled in the database (pushed to the application)</span></div>
+        <div><b>NoSQL provides</b><span>easy and frequent changes · fast development · large data volumes · no fixed schema</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="part-lab">
+    <div class="stack-v">
+      <p class="eyebrow">Interactive · hashing vs range partitioning</p>
+      <h3 class="h-sub">Where does key <em>K</em> go?</h3>
+      <p class="body-copy">Four nodes. Insert orders whose ids grow one by one, then insert random ids. Then run a range query. Watch which scheme spreads the load and which one keeps neighbours together.</p>
+      <div class="seg big" id="pl-mode"><button type="button" class="on" data-m="hash">Hash: h(K) = K mod 4</button><button type="button" data-m="range">Range: 2,500 keys per node</button></div>
+      <div class="btn-row">
+        <button type="button" class="btn solid" id="pl-seq">Insert 8 new orders</button>
+        <button type="button" class="btn" id="pl-rand">Insert 8 random ids</button>
+        <button type="button" class="btn" id="pl-range">Find K from 1001 to 1008</button>
+        <button type="button" class="btn" id="pl-reset">Reset</button>
+      </div>
+      <pre class="term" id="pl-log" style="min-height:4.2em"></pre>
+    </div>
+    <div class="pl-nodes" id="pl-nodes"></div>
+  </div>
+</section>
+    <!-- 09 SCHEMA -->
+    <section class="chapter schema" id="schema" data-scene="doc" data-chapter="Schema-less" data-part="3">
+      <div class="schema-head">
+        <div style="display:grid;gap:20px">
+          <p class="eyebrow">Characteristic · not requiring a schema</p>
+          <h2 class="h-display" data-split>Schema on write vs <em>schema on read.</em></h2>
+        </div>
+        <div style="display:grid;gap:14px">
+          <p class="body-copy">A relational table checks every row against its schema when you write it. A document store accepts each document as it is, and your application makes sense of the shape when it reads.</p>
+          <p class="body-copy">In a schema-less model there is no schema to declare, <strong>no unused cell</strong>, and no declared data type (types are implicit). Most decisions move to the application layer, and related items are gathered into one <strong>aggregate</strong>, such as a document. Flexible does not mean lawless: MongoDB, for example, can still validate documents against a JSON Schema.</p>
+        </div>
+      </div>
+      <div class="schema-ctl">
+        <span class="lab">A new feature needs a field:</span>
+        <button type="button" class="btn" data-field="phone">+ phone</button>
+        <button type="button" class="btn" data-field="tags">+ tags</button>
+        <button type="button" class="btn" data-field="loyalty">+ loyalty_tier</button>
+        <button type="button" class="btn" id="schema-reset">Reset</button>
+      </div>
+      <div class="schema-grid">
+        <article class="panel">
+          <div class="panel-head"><span>Relational · users table</span><span class="tag sql">ALTER first</span></div>
+          <div class="panel-body" style="display:grid;gap:12px">
+            <pre class="term" id="schema-ddl"><span class="dim">-- the table as designed</span></pre>
+            <div class="tbl-wrap"><table class="mini" id="schema-table"><thead><tr><th>id</th><th>name</th><th>email</th></tr></thead><tbody><tr><td>1</td><td>Asha</td><td>asha@mail.in</td></tr><tr><td>2</td><td>Ravi</td><td>ravi@mail.in</td></tr><tr><td>3</td><td>Meera</td><td>meera@mail.in</td></tr></tbody></table></div>
+            <div class="schema-cost"><span>Columns <b id="sc-rows">3</b></span><span>NULL cells <b id="sc-null">0</b></span><span>Migrations <b id="sc-mig">0</b></span></div>
+          </div>
+        </article>
+        <article class="panel">
+          <div class="panel-head"><span>Document · users collection</span><span class="tag doc">Just write it</span></div>
+          <div class="panel-body" style="display:grid;gap:12px">
+            <pre class="term" id="schema-dml"><span class="dim">// documents as stored</span></pre>
+            <div class="schema-docs" id="schema-docs"></div>
+            <div class="schema-cost"><span>Docs touched <b id="sd-rows">0</b></span><span>Empty fields <b>0</b></span><span>Migrations <b>0</b></span></div>
+          </div>
+        </article>
+      </div>
+    </section>

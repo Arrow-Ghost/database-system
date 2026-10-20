@@ -1,0 +1,21 @@
+# Optional Render Blueprint: New + > Blueprint > pick this repo.
+services:
+  - type: web
+    name: dbs-module5-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DB_NAME
+        value: module5_site
+      - key: MONGODB_URI
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false

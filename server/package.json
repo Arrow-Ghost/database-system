@@ -1,0 +1,20 @@
+{
+  "name": "dbs-module5-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Leaderboard API for the Not Only SQL seminar site (Team 9, BACSE202).",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^4.22.3",
+    "mongodb": "^6.21.0"
+  }
+}

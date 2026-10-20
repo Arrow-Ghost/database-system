@@ -1,0 +1,73 @@
+---
+import '../styles/global.css';
+import '../styles/folders.css';
+import '../styles/module5.css';
+import Opening from '../parts/Opening.astro';
+import Distributed from '../parts/Distributed.astro';
+import WhyNoSQL from '../parts/WhyNoSQL.astro';
+import Traits from '../parts/Traits.astro';
+import CapBase from '../parts/CapBase.astro';
+import Modelling from '../parts/Modelling.astro';
+import DistMR from '../parts/DistMR.astro';
+import Types from '../parts/Types.astro';
+import Closing from '../parts/Closing.astro';
+
+const parts = ['Opening', 'Distributed databases', 'Why NoSQL', 'Characteristics', 'CAP · ACID · BASE', 'Data modelling', 'Distribution · MapReduce', 'Types of NoSQL', 'Conclusion'];
+---
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Module 05 · Distributed and NoSQL Databases</title>
+  <meta name="description" content="An interactive, scroll-driven tour of BACSE202 Module 5: distributed databases, fragmentation, replication, two-phase commit, query processing, NoSQL, CAP, BASE, aggregate data models, distribution models, MapReduce and the four types of NoSQL database." />
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Serif:ital@0;1&display=swap" />
+</head>
+<body>
+  <canvas id="world" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="scanline" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <div id="boot" aria-hidden="true">
+    <div class="boot-box">
+      <div class="boot-count"><span id="boot-n">000</span></div>
+      <div class="boot-bar"><i id="boot-bar"></i></div>
+      <ol id="boot-log"></ol>
+    </div>
+  </div>
+
+  <div class="hud-progress" id="hud-progress"></div>
+  <div class="hud-bottom" aria-hidden="true"><span class="hud-part" id="hud-part"></span><span class="pct" id="hud-pct">000%</span></div>
+  <button type="button" class="toc-btn" id="toc-btn" aria-expanded="false" aria-controls="toc">
+    <span class="toc-ico" aria-hidden="true"><i></i><i></i><i></i></span><span>Contents</span>
+  </button>
+  <nav class="part-rail" id="part-rail" aria-label="Parts">
+    {parts.map((p, i) => <button type="button" data-part-jump={i} aria-label={`Go to ${p}`}><span>{String(i).padStart(2, '0')} {p}</span><i><u></u></i></button>)}
+  </nav>
+  <div class="toc" id="toc" role="dialog" aria-modal="true" aria-label="Contents" hidden>
+    <div class="toc-inner">
+      <div class="toc-top"><p class="eyebrow">Module 05 · contents</p><button type="button" class="btn" id="toc-close">Close ✕</button></div>
+      <div class="toc-grid" id="toc-grid"></div>
+    </div>
+  </div>
+
+  <main>
+    <Opening />
+    <Distributed />
+    <WhyNoSQL />
+    <Traits />
+    <CapBase />
+    <Modelling />
+    <DistMR />
+    <Types />
+    <Closing />
+  </main>
+
+  <script>
+    import '../scripts/main.ts';
+  </script>
+</body>
+</html>

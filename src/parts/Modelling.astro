@@ -1,0 +1,80 @@
+---
+import Marq from './Marq.astro';
+---
+<Marq n="05" t="Data modelling" dir={1} />
+
+<!-- AGGREGATES -->
+<section class="chapter aggc" id="aggregates" data-scene="nest" data-chapter="Aggregate data models" data-part="5">
+  <div class="agg-head">
+    <div class="stack-v">
+      <p class="eyebrow">NoSQL modelling · aggregate data models</p>
+      <h2 class="h-display" data-split>Draw the <em>boundary.</em></h2>
+    </div>
+    <div class="stack-v">
+      <p class="lede">An <em>aggregate</em> is a collection of related objects that we treat as a unit.</p>
+      <p class="body-copy">It is the unit you read, write and keep consistent in one go, and the unit the database moves between machines. Key-value, document and column-family stores are <strong>aggregate-oriented</strong>. Relational and graph databases are <strong>aggregate-ignorant</strong>: they have no built-in idea of which rows belong together. The term comes from Martin Fowler and Pramod Sadalage’s <em>NoSQL Distilled</em>.</p>
+    </div>
+  </div>
+  <div class="agg-ctl">
+    <div class="seg big" id="agg-mode">
+      <button type="button" class="on" data-a="two">Customer + order aggregates</button>
+      <button type="button" data-a="one">One customer aggregate</button>
+      <button type="button" data-a="none">Aggregate-ignorant (relational)</button>
+    </div>
+  </div>
+  <div class="agg-grid">
+    <article class="panel">
+      <div class="panel-head"><span>Domain objects · dashed lines are aggregate boundaries</span><span class="dots"><i></i><i></i><i></i></span></div>
+      <div class="panel-body"><svg class="agg-svg" id="agg-svg" viewBox="0 0 560 360" role="img" aria-label="Customer, order, line items, product, addresses and payment, grouped into aggregates"></svg></div>
+    </article>
+    <article class="panel">
+      <div class="panel-head"><span id="agg-k">What gets stored</span><span class="tag doc" id="agg-tag">2 aggregates</span></div>
+      <div class="panel-body stack-v">
+        <pre class="term agg-json" id="agg-json"></pre>
+      </div>
+    </article>
+  </div>
+  <div class="tbl-wrap">
+    <table class="agg-cost" id="agg-cost">
+      <thead><tr><th>Question</th><th>Work with this design</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <p class="note">There is no universally right boundary. It depends on how the data is used. Aggregates make the common question cheap and atomic, and make questions that cut across aggregates expensive. That is why aggregate stores pair well with MapReduce and materialized views.</p>
+</section>
+
+<!-- MODELLING TECHNIQUES -->
+<section class="chapter modc" id="modeling" data-scene="doc" data-chapter="Modelling techniques" data-part="5">
+  <div class="mod-head">
+    <div class="stack-v">
+      <p class="eyebrow">NoSQL modelling techniques · document example</p>
+      <h2 class="h-display" data-split>Embed or <em>reference?</em></h2>
+    </div>
+    <p class="body-copy">Projects and workers have a many-to-many relationship. Here are three ways to store it in a document database such as MongoDB, as shown in the textbook. Switch designs and try the two operations.</p>
+  </div>
+  <div class="mod-grid">
+    <div class="mod-tabs" role="tablist" aria-label="Design">
+      <button type="button" role="tab" class="on" data-d="a"><span>a</span>Embed the workers</button>
+      <button type="button" role="tab" data-d="b"><span>b</span>Embed worker ids</button>
+      <button type="button" role="tab" data-d="c"><span>c</span>Normalized documents</button>
+    </div>
+    <article class="panel mod-docs">
+      <div class="panel-head"><span id="mod-k">project collection</span><div class="btn-row"><button type="button" class="btn" id="mod-read">Read P1 with workers</button><button type="button" class="btn" id="mod-join">John joins P2</button></div></div>
+      <div class="panel-body stack-v">
+        <div class="mod-cards" id="mod-cards"></div>
+        <pre class="term" id="mod-q" style="min-height:4.6em"></pre>
+      </div>
+    </article>
+  </div>
+  <div class="tech">
+    <p class="eyebrow">Techniques that come up again and again</p>
+    <div class="tech-row">
+      <div><b>Design for the queries</b><p>List the questions first, then shape the data so each common question is one read.</p></div>
+      <div><b>Denormalization</b><p>Copy data where it is read, accepting more storage and harder updates in exchange for fewer reads.</p></div>
+      <div><b>Aggregates (embedding)</b><p>Nest related objects inside one record, so they are read and updated atomically together.</p></div>
+      <div><b>Application-side joins</b><p>Store ids instead of copies and look them up in a second query, when data changes often.</p></div>
+      <div><b>Key design</b><p>Composite keys such as <code>user:42:orders</code> or <code>sensor_id + timestamp</code> group and sort data for range reads.</p></div>
+      <div><b>Index tables and views</b><p>Keep a second, query-shaped copy (a materialized view or index table) for questions that cut across aggregates.</p></div>
+    </div>
+  </div>
+</section>

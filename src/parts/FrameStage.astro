@@ -1,0 +1,34 @@
+---
+// A pinned, scroll-scrubbed animation with numbered step cards, adapted from the
+// frame-sequence ("MacBook Neo") hero. Frames are drawn live on a canvas instead of loaded as JPEGs.
+interface Step { from: number; to: number; color: string; icon: string; title: string; text: string; label: string }
+interface Props { id: string; chapter: string; scene: string; part: string; eyebrow: string; title: string; sub: string; steps: Step[]; height?: string; frames?: number; draw: string }
+const { id, chapter, scene, part, eyebrow, title, sub, steps, height = '560vh', frames = 960, draw } = Astro.props;
+const total = String(steps.length).padStart(2, '0');
+---
+<section class="chapter fstage" id={id} data-chapter={chapter} data-scene={scene} data-part={part} style={`height:${height}`} data-draw={draw} data-frames={frames}>
+  <div class="fs-sticky">
+    <canvas class="fs-canvas" aria-hidden="true"></canvas>
+    <div class="fs-copy">
+      <p class="eyebrow">{eyebrow}</p>
+      <h2 class="fs-title" set:html={title} />
+      <p class="fs-sub">{sub}</p>
+      <slot />
+    </div>
+    <div class="fs-cards">
+      {steps.map((s, i) => (
+        <article class="fs-card" data-from={s.from} data-to={s.to} style={`--c:${s.color}`}>
+          <div class="fs-card-inner">
+            <span class="fs-glow" aria-hidden="true"></span>
+            <div class="fs-card-head"><span class="fs-num"><strong>{String(i + 1).padStart(2, '0')}</strong> / {total}</span><span class="fs-icon" aria-hidden="true">{s.icon}</span></div>
+            <h3>{s.title}</h3>
+            <p set:html={s.text} />
+            <div class="fs-foot"><div class="fs-ticks" aria-hidden="true">{steps.map(() => <i><span></span></i>)}</div><span class="fs-label">{s.label}</span></div>
+          </div>
+        </article>
+      ))}
+    </div>
+    <div class="fs-frame" aria-hidden="true">frame <b>0001</b> / {String(frames).padStart(4, '0')}</div>
+    <div class="fs-progress" aria-hidden="true"><span></span></div>
+  </div>
+</section>
