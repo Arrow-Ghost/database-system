@@ -40,6 +40,7 @@ export function moduleMap(jump: (id: string) => void, reduced: boolean) {
   const head = document.querySelector<HTMLElement>('#morph-head')!;
   const N = CARDS.length;
   const els: HTMLElement[] = [];
+  const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
   CARDS.forEach((cd, i) => {
     const el = document.createElement('div');
     el.className = 'mcard';
@@ -55,12 +56,20 @@ export function moduleMap(jump: (id: string) => void, reduced: boolean) {
     back.innerHTML = `<span class="mp">${cd.part}</span><p>${cd.d}</p>`;
     const go = document.createElement('button');
     go.type = 'button'; go.textContent = 'Go →'; go.setAttribute('aria-label', `Go to ${cd.t}`);
-    go.addEventListener('click', (e) => { e.stopPropagation(); jump(cd.to); });
+    go.tabIndex = -1;
     back.appendChild(go);
     inner.append(front, back);
     el.appendChild(inner);
-    // touch: first tap flips, the Go button jumps
-    front.addEventListener('click', () => { els.forEach((x) => x !== el && x.classList.remove('flip')); el.classList.toggle('flip'); });
+    el.tabIndex = 0;
+    el.setAttribute('aria-label', `${cd.t}: ${cd.d} Press to go there.`);
+    // One handler on the whole card, so hit-testing through the 3D flip never decides the outcome.
+    // Mouse: hover flips, a click anywhere on the card jumps. Touch: first tap flips, second tap jumps.
+    el.addEventListener('click', () => {
+      if (finePointer || el.classList.contains('flip')) { els.forEach((x) => x.classList.remove('flip')); jump(cd.to); return; }
+      els.forEach((x) => x !== el && x.classList.remove('flip'));
+      el.classList.add('flip');
+    });
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jump(cd.to); } });
     stage.appendChild(el);
     els.push(el);
   });
@@ -151,9 +160,10 @@ export function moduleMap(jump: (id: string) => void, reduced: boolean) {
     },
   });
   pin.addEventListener('pointermove', (e) => {
-    if (e.pointerType === 'touch') return;
+    if (e.pointerType === 'touch' || (e.target as HTMLElement).closest?.('.mcard')) return;
     const r = pin.getBoundingClientRect();
-    mouse = (((e.clientX - r.left) / r.width) * 2 - 1) * 70;
+    // Parallax stays tiny: a larger drift moved cards out from under the cursor between hover and click.
+    mouse = (((e.clientX - r.left) / r.width) * 2 - 1) * 6;
   });
   pin.addEventListener('pointerleave', () => (mouse = 0));
   document.addEventListener('pointerdown', (e) => { if (!stage.contains(e.target as Node)) els.forEach((x) => x.classList.remove('flip')); });

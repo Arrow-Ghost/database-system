@@ -481,8 +481,8 @@ th.newcol, td.newcol { animation: colin 0.6s var(--ease); }
 .kv-input { display: flex; gap: 8px; }
 .kv-input .field { flex: 1; }
 .doc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.doc-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; overflow: auto; min-height: 0; align-content: start; }
-.doc-card { font-family: var(--f-mono); font-size: 0.68rem; line-height: 1.5; border: 1px solid var(--rule); padding: 8px 10px; white-space: pre; overflow: hidden; color: var(--faint); transition: border-color 0.3s, color 0.3s, opacity 0.3s; }
+.doc-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr)); gap: 8px; overflow: auto; min-height: 0; align-content: start; }
+.doc-card { font-family: var(--f-mono); font-size: 0.68rem; line-height: 1.5; border: 1px solid var(--rule); padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; color: var(--faint); transition: border-color 0.3s, color 0.3s, opacity 0.3s; }
 .doc-card.match { border-color: var(--ice); color: #d9e8ff; }
 .col-wrap { overflow: auto; min-height: 0; display: grid; gap: 10px; align-content: start; }
 .part { border: 1px solid var(--rule); }

@@ -349,7 +349,7 @@ export function fragmentation() {
   }
   function render(animate = true) {
     const { groups, checks, alg } = layout();
-    const state = animate ? Flip.getState(stage.querySelectorAll('.fcell, .fgroup')) : null;
+    const state = animate ? Flip.getState(stage.querySelectorAll('.fcell')) : null;
     const used = new Map<string, number>();
     const take = (k: string) => { const n = used.get(k) ?? 0; used.set(k, n + 1); return n ? `${k}#${n}` : k; };
     // duplicates (same row in two horizontal fragments) are marked so the eye catches them
@@ -383,8 +383,10 @@ export function fragmentation() {
     $('#frag-tag').textContent = mode === 'whole' ? '1 relation' : `${groups.filter((g) => !g.lost).length} fragments`;
     $$('#frag-checks > div').forEach((d) => { d.className = checks[d.dataset.c!]; });
     if (state) {
+      gsap.fromTo(stage.querySelectorAll('.fgroup'), { opacity: 0.4 }, { opacity: 1, duration: 0.8, ease: 'power2.out' });
       Flip.from(state, {
-        duration: 0.95, ease: 'power3.inOut', absolute: true, stagger: 0.0025, nested: true, prune: true,
+        targets: stage.querySelectorAll('.fcell'),
+        duration: 0.95, ease: 'power3.inOut', absolute: true, stagger: 0.0025,
         onEnter: (els) => gsap.fromTo(els, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.6, delay: 0.35, ease: 'back.out(2)' }),
       });
     }
@@ -552,8 +554,8 @@ export function concurrency() {
         el('rect', { x, y, width: 32, height: 24, rx: 3, fill: prim ? '#2a1d10' : '#0f1216', stroke: prim ? '#ff8a1f' : 'rgba(236,231,218,.3)' }, g);
         el('text', { x: x + 16, y: y + 16, 'text-anchor': 'middle' }, g, prim ? `${it}★` : it);
       });
-      if (i === 3) el('text', { x: p[0] + 62, y: p[1] + 30, 'text-anchor': 'end', class: 'sub' }, g, 'T1 runs here');
-      if (i === 2) el('text', { x: p[0] + 62, y: p[1] + 30, 'text-anchor': 'end', class: 'sub' }, g, 'T2 runs here');
+      if (i === 3) el('text', { x: p[0] + 64, y: p[1] - 18, 'text-anchor': 'end', class: 'sub' }, g, 'T1 runs here');
+      if (i === 2) el('text', { x: p[0] + 64, y: p[1] - 18, 'text-anchor': 'end', class: 'sub' }, g, 'T2 runs here');
       nodes.push(g);
     });
   }
@@ -618,7 +620,7 @@ export function concurrency() {
       el('text', { x: mx, y: my + (bend > 0 ? 14 : -6), 'text-anchor': 'middle', class: 'sv-lbl' }, dl, label);
     };
     if (aborted) {
-      node(150, 80, 'T1', 'ok'); el('text', { x: 260, y: 86, class: 'sv-lbl' }, dl, 'T2 rolled back · T1 continues');
+      node(210, 66, 'T1', 'ok'); el('text', { x: 210, y: 118, 'text-anchor': 'middle', class: 'sv-lbl' }, dl, 'T2 rolled back · T1 continues');
       return;
     }
     if (!merged) {
@@ -680,13 +682,13 @@ export function costLab() {
     [[1, 2], [1, 3], [2, 3]].forEach(([a, b]) => el('path', { d: `M${S[a][0]} ${S[a][1]} L${S[b][0]} ${S[b][1]}`, class: 'sv-wire' }, svg));
     const node = (n: number, t1: string, t2: string, cls: string) => {
       const g = el('g', { class: `sv-node ${cls}` }, svg);
-      el('rect', { x: S[n][0] - 92, y: S[n][1] - 34, width: 184, height: 68, rx: 4 }, g);
+      el('rect', { x: S[n][0] - 104, y: S[n][1] - 34, width: 208, height: 68, rx: 4 }, g);
       el('text', { x: S[n][0], y: S[n][1] - 10, 'text-anchor': 'middle' }, g, t1);
       el('text', { x: S[n][0], y: S[n][1] + 8, 'text-anchor': 'middle', class: 'sub' }, g, t2);
       return g;
     };
     node(1, 'Site 1 · EMPLOYEE', '10,000 rows · 1,000,000 B', 'cold');
-    node(2, site === 2 ? 'Site 2 · DEPARTMENT ★' : 'Site 2 · DEPARTMENT', site === 2 ? '3,500 B · result needed here' : '100 rows · 3,500 B', site === 2 ? 'hot' : 'ok');
+    node(2, site === 2 ? 'Site 2 · DEPARTMENT ★' : 'Site 2 · DEPARTMENT', site === 2 ? '3,500 B · result here' : '100 rows · 3,500 B', site === 2 ? 'hot' : 'ok');
     const g3 = node(3, site === 3 ? 'Site 3 · result site ★' : 'Site 3', site === 3 ? 'query issued here' : 'not involved', site === 3 ? 'hot' : 'dim');
     void g3;
     const qtxt = q === 'Q' ? 'Q: Fname, Lname, Dname for every employee → 10,000 × 40 B = 400,000 B' : 'Q′: Dname and manager’s name per department → 100 × 40 B = 4,000 B';

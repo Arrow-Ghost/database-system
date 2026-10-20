@@ -276,107 +276,141 @@ const drawDqp: Draw = (c, p, r, t) => {
 /* ================================================================ MapReduce */
 const MR = {
   splits: [['sql', 'nosql', 'sql'], ['nosql', 'graph'], ['sql', 'graph', 'graph']],
-  part: { sql: 0, graph: 0, nosql: 1 } as Record<string, number>,
+  part: { graph: 0, sql: 0, nosql: 1 } as Record<string, number>,
+  keys: [['graph', 'sql'], ['nosql']] as string[][],
 };
 const PC = [COL.amber, COL.ice];
+function pill(c: CanvasRenderingContext2D, x: number, y: number, label: string, col: string, s: number, fill = 'rgba(10,12,15,0.94)', alpha = 1) {
+  if (alpha <= 0) return 0;
+  c.save(); c.globalAlpha *= alpha;
+  c.font = `500 ${9.5 * s}px ${MONO}`;
+  const w = c.measureText(label).width + 10 * s, h = 15 * s;
+  rr(c, x - w / 2, y - h / 2, w, h, 3);
+  c.fillStyle = fill; c.fill(); c.strokeStyle = col; c.lineWidth = 1; c.stroke();
+  c.fillStyle = col; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(label, x, y + 0.5);
+  c.restore();
+  return w;
+}
 const drawMr: Draw = (c, p, r, t) => {
   const wide = r.w / r.h > 1.1;
-  const s = clamp(Math.min(r.w / (wide ? 700 : 470), r.h / 400), 0.58, 1.25);
-  const cols = wide ? [0.06, 0.3, 0.64, 0.92] : [0.08, 0.36, 0.7, 0.93];
-  const X = cols.map((f) => r.x + r.w * f);
-  const ys = [0.24, 0.52, 0.8].map((f) => r.y + r.h * f);
-  const ry = [0.36, 0.72].map((f) => r.y + r.h * f);
-  const sp = seg(p, 0.02, 0.16), mp = seg(p, 0.22, 0.4), sh = seg(p, 0.44, 0.62), rd = seg(p, 0.66, 0.82), fx = seg(p, 0.86, 0.99);
-  // master
-  const M: [number, number] = [r.x + r.w * 0.18, r.y + r.h * 0.04];
-  box(c, M[0], M[1], 96 * s, 24 * s, COL.lilac); txt(c, 'master', M[0], M[1], 10 * s, COL.lilac);
-  // input document splitting into three
-  MR.splits.forEach((words, i) => {
-    const y0 = r.y + r.h * 0.52 + (i - 1) * 22 * s, y1 = ys[i];
-    const y = lerp(y0, y1, eio(sp));
-    const consumed = seg(mp, i * 0.1, 0.5 + i * 0.1);
-    c.save(); c.globalAlpha = 1 - consumed * 0.6;
-    box(c, X[0] + 38 * s, y, 92 * s, 20 * s, COL.ivory, 'rgba(236,231,218,0.06)');
-    txt(c, words.join(' '), X[0] + 38 * s, y, 9.5 * s, COL.ivory);
-    c.restore();
-    if (sp > 0.6) line(c, M[0], M[1] + 12 * s, X[1], ys[i] - 24 * s, `rgba(216,199,255,${0.35 * seg(sp, 0.6, 1) * (1 - seg(p, 0.42, 0.46))})`, 1, [3, 5]);
-  });
-  txt(c, 'input', X[0] + 38 * s, r.y + r.h * 0.97, 9 * s, COL.faint);
-  // mappers
-  const dead = fx > 0.15 && fx < 1;
-  ys.forEach((y, i) => {
-    const active = mp > i * 0.1 && mp < 0.6 + i * 0.12;
-    const isDead = i === 1 && fx > 0.15;
-    box(c, X[1], y, 104 * s, 40 * s, isDead ? COL.fail : COL.amber, isDead ? 'rgba(40,16,16,0.95)' : 'rgba(26,22,16,0.94)', active ? 0.6 + 0.3 * Math.sin(t * 6) : 0);
-    txt(c, isDead ? 'worker ✕' : `map ${i + 1}`, X[1], y - 6 * s, 12 * s, isDead ? COL.fail : COL.ivory, { font: DISP });
-    txt(c, isDead ? 'no heartbeat' : 'emit(w, 1)', X[1], y + 9 * s, 8.5 * s, isDead ? COL.fail : COL.dim);
-  });
-  // spare worker re-runs the dead mapper's split
-  if (fx > 0.3) {
-    const k = eo(seg(fx, 0.3, 0.55)), y = ys[1] + 52 * s;
-    c.save(); c.globalAlpha = k;
-    box(c, X[1], y, 104 * s, 34 * s, COL.ok, 'rgba(20,32,22,0.94)', seg(fx, 0.55, 0.8) > 0 && seg(fx, 0.55, 0.8) < 1 ? 0.7 : 0);
-    txt(c, 'map 2 · retry', X[1], y, 11 * s, COL.ok, { font: DISP });
-    line(c, M[0], M[1] + 12 * s, X[1], y - 17 * s, 'rgba(159,220,140,0.5)', 1, [3, 5]);
+  const s = clamp(Math.min(r.w / (wide ? 760 : 400), r.h / (wide ? 420 : 470)), 0.62, 1.2);
+  const sp = seg(p, 0.02, 0.16), mp = seg(p, 0.22, 0.4), sh = seg(p, 0.44, 0.64), rd = seg(p, 0.66, 0.84), fx = seg(p, 0.86, 0.99);
+  const MW = 96 * s, MH = 40 * s;
+  const RW = wide ? Math.min(200 * s, r.w * 0.27) : Math.min(180 * s, r.w * 0.44), RH = 76 * s;
+  // ---- layout: left-to-right on wide screens, top-to-bottom on phones
+  const mapAt: [number, number][] = wide
+    ? [0.24, 0.52, 0.8].map((f) => [r.x + r.w * 0.3, r.y + r.h * f])
+    : [0.17, 0.5, 0.83].map((f) => [r.x + r.w * f, r.y + r.h * 0.27]);
+  const redAt: [number, number][] = wide
+    ? [0.36, 0.74].map((f) => [r.x + r.w * 0.68, r.y + r.h * f])
+    : [0.26, 0.74].map((f) => [r.x + r.w * f, r.y + r.h * 0.68]);
+  const inAt = (i: number): [number, number] => (wide ? [r.x + 56 * s, mapAt[i][1]] : [mapAt[i][0], r.y + r.h * 0.07]);
+  const docAt: [number, number] = wide ? [r.x + 56 * s, r.y + r.h * 0.52] : [r.x + r.w * 0.5, r.y + r.h * 0.07];
+  const master: [number, number] = wide ? [r.x + r.w * 0.3, r.y + r.h * 0.06] : [r.x + r.w * 0.5, r.y + r.h * 0.16];
+  // where pair k of mapper i waits after being emitted
+  const emitAt = (i: number, k: number, n: number): [number, number] => wide
+    ? [mapAt[i][0] + MW / 2 + 38 * s, mapAt[i][1] + (k - (n - 1) / 2) * 17 * s]
+    : [mapAt[i][0], mapAt[i][1] + MH / 2 + 14 * s + k * 17 * s];
+  // slot j of key row in reducer
+  const rowY = (part: number, key: string) => redAt[part][1] - RH / 2 + 34 * s + MR.keys[part].indexOf(key) * 21 * s;
+  const slotX = (part: number, j: number) => redAt[part][0] - RW / 2 + 58 * s + j * 18 * s;
+  const outAt = (key: string): [number, number] => {
+    const all = ['graph', 'sql', 'nosql'], j = all.indexOf(key);
+    return wide ? [r.x + r.w - 52 * s, r.y + r.h * (0.3 + j * 0.2)] : [r.x + r.w * (0.2 + j * 0.3), r.y + r.h * 0.96];
+  };
+  // ---- master and its assignment lines
+  box(c, master[0], master[1], 92 * s, 22 * s, COL.lilac); txt(c, 'master', master[0], master[1], 10 * s, COL.lilac);
+  const assign = seg(sp, 0.5, 1) * (1 - seg(p, 0.4, 0.44));
+  if (assign > 0) mapAt.forEach((m) => line(c, master[0], master[1] + 11 * s, m[0], m[1] - MH / 2, `rgba(216,199,255,${0.4 * assign})`, 1, [3, 5]));
+  // ---- input: one document, split into three
+  if (sp < 0.35) {
+    c.save(); c.globalAlpha = 1 - seg(sp, 0.2, 0.35);
+    box(c, docAt[0], docAt[1], 104 * s, 56 * s, COL.ivory, 'rgba(236,231,218,0.06)');
+    txt(c, 'input file', docAt[0], docAt[1], 10 * s, COL.ivory);
     c.restore();
   }
-  // reducers + output
-  ry.forEach((y, j) => {
-    box(c, X[2], y, 120 * s, 44 * s, COL.ok, 'rgba(20,32,22,0.94)', rd > 0 && rd < 1 ? 0.5 : 0);
-    txt(c, `reduce ${j + 1}`, X[2], y - 14 * s, 12 * s, COL.ivory, { font: DISP });
-  });
-  txt(c, 'hash(word) mod 2', lerp(X[1], X[2], 0.5), r.y + r.h * 0.97, 9 * s, COL.faint, { alpha: seg(sh, 0, 0.2) });
-  // pairs: emitted at the mapper, shuffled to reducers, grouped, then reduced
-  const groups: Record<string, number> = {};
-  const order = ['graph', 'sql', 'nosql'];
-  let idx = 0;
   MR.splits.forEach((words, i) => {
-    words.forEach((w, k) => {
-      const part = MR.part[w];
-      const gi = groups[w] = (groups[w] ?? 0) + 1;
-      const emitK = eo(seg(mp, i * 0.12 + k * 0.06, i * 0.12 + k * 0.06 + 0.25));
-      if (emitK <= 0) { idx++; return; }
-      const a: [number, number] = [X[1] + 62 * s + k * 0, ys[i] - 14 * s + k * 14 * s];
-      const keysHere = order.filter((o) => MR.part[o] === part);
-      const row = keysHere.indexOf(w);
-      const b: [number, number] = [X[2] - 22 * s + (gi - 1) * 24 * s, ry[part] + 4 * s + row * 15 * s];
-      const sk = eio(seg(sh, idx * 0.05, idx * 0.05 + 0.45));
-      const x = sk > 0 ? lerp(a[0], b[0], sk) : lerp(X[1], a[0], emitK);
-      const y = sk > 0 ? lerp(a[1], b[1], sk) - Math.sin(sk * Math.PI) * 30 * s : lerp(ys[i], a[1], emitK);
-      const gone = rd > 0.3;
-      c.save(); c.globalAlpha = (gone ? 1 - seg(rd, 0.3, 0.6) : 1) * emitK;
-      const lbl = sk >= 1 ? '1' : `(${w},1)`;
-      c.font = `500 ${9.5 * s}px ${MONO}`;
-      const ww = c.measureText(lbl).width + 8 * s;
-      rr(c, x - ww / 2 + (sk >= 1 ? 0 : 20 * s), y - 7 * s, ww, 14 * s, 3);
-      c.fillStyle = 'rgba(10,12,15,0.9)'; c.fill(); c.strokeStyle = PC[part]; c.lineWidth = 1; c.stroke();
-      c.fillStyle = PC[part]; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(lbl, x + (sk >= 1 ? 0 : 20 * s), y);
-      c.restore();
-      idx++;
-    });
+    const k = eo(seg(sp, 0.2, 0.9));
+    if (k <= 0) return;
+    const to = inAt(i), x = lerp(docAt[0], to[0], k), y = lerp(docAt[1], to[1], k);
+    const used = seg(mp, i * 0.12, 0.3 + i * 0.12);
+    c.save(); c.globalAlpha = k * (1 - used * 0.55);
+    box(c, x, y, 104 * s, 20 * s, COL.ivory, 'rgba(236,231,218,0.06)');
+    txt(c, words.join(' '), x, y, 9 * s, COL.ivory);
+    c.restore();
+    if (wide && used > 0 && used < 1) line(c, x + 52 * s, y, mapAt[i][0] - MW / 2, mapAt[i][1], `rgba(236,231,218,${0.5 * (1 - used)})`, 1.2);
   });
-  // group labels while shuffled, then reduced totals and output files
-  const totals: Record<string, number> = { sql: 3, graph: 3, nosql: 2 };
-  order.forEach((w) => {
-    const part = MR.part[w], row = order.filter((o) => MR.part[o] === part).indexOf(w);
-    const y = ry[part] + 4 * s + row * 15 * s;
-    const gl = seg(sh, 0.75, 1) * (1 - seg(rd, 0.3, 0.6));
-    txt(c, w, X[2] - 34 * s, y, 9.5 * s, PC[part], { align: 'right', alpha: gl });
-    const out = eo(seg(rd, 0.4, 0.9));
-    if (out > 0) {
-      const ox = lerp(X[2], X[3], out), oy = lerp(y, r.y + r.h * (0.3 + order.indexOf(w) * 0.2), out);
-      c.save(); c.globalAlpha = seg(rd, 0.4, 0.55);
-      const lbl = `(${w}, ${totals[w]})`;
-      c.font = `600 ${11 * s}px ${MONO}`;
-      const ww = c.measureText(lbl).width + 12 * s;
-      rr(c, ox - ww / 2, oy - 9 * s, ww, 18 * s, 3); c.fillStyle = 'rgba(20,32,22,0.95)'; c.fill(); c.strokeStyle = COL.ok; c.stroke();
-      c.fillStyle = COL.ok; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(lbl, ox, oy);
-      c.restore();
+  // ---- mappers (mapper 2 fails and is re-run in the last step)
+  mapAt.forEach((m, i) => {
+    const active = mp > i * 0.12 && mp < 0.45 + i * 0.12;
+    let col = COL.amber, fill = 'rgba(26,22,16,0.95)', l1 = `map ${i + 1}`, l2 = 'emit(word, 1)';
+    if (i === 1 && fx > 0.12) {
+      if (fx < 0.5) { col = COL.fail; fill = 'rgba(40,16,16,0.95)'; l1 = 'worker ✕'; l2 = 'no heartbeat'; }
+      else { col = COL.ok; fill = 'rgba(20,32,22,0.95)'; l1 = 'map 2 · retry'; l2 = 'on worker 4'; }
+    }
+    box(c, m[0], m[1], MW, MH, col, fill, active ? 0.5 + 0.3 * Math.sin(t * 6) : i === 1 && fx > 0.5 && fx < 0.85 ? 0.6 : 0);
+    txt(c, l1, m[0], m[1] - 7 * s, 12 * s, i === 1 && fx > 0.12 ? col : COL.ivory, { font: DISP });
+    txt(c, l2, m[0], m[1] + 9 * s, 8.5 * s, i === 1 && fx > 0.12 ? col : COL.dim);
+  });
+  if (fx > 0.45) line(c, master[0], master[1] + 11 * s, mapAt[1][0], mapAt[1][1] - MH / 2, `rgba(159,220,140,${0.6 * seg(fx, 0.45, 0.6)})`, 1.2, [3, 5]);
+  // ---- shuffle lanes
+  const lanes = seg(sh, 0, 0.15) * (1 - seg(rd, 0.5, 1));
+  if (lanes > 0) mapAt.forEach((m) => redAt.forEach((q, j) => {
+    const a: [number, number] = wide ? [m[0] + MW / 2 + 70 * s, m[1]] : [m[0], m[1] + MH / 2 + 62 * s];
+    const b: [number, number] = wide ? [q[0] - RW / 2, q[1]] : [q[0], q[1] - RH / 2];
+    line(c, a[0], a[1], b[0], b[1], j ? `rgba(156,200,255,${0.16 * lanes})` : `rgba(255,138,31,${0.16 * lanes})`, 1, [2, 6]);
+  }));
+  // ---- reducers
+  redAt.forEach((q, j) => {
+    const glow = rd > 0 && rd < 0.6 ? 0.5 : 0;
+    box(c, q[0], q[1], RW, RH, COL.ok, 'rgba(20,32,22,0.95)', glow);
+    txt(c, `reduce ${j + 1}`, q[0] - RW / 2 + 10 * s, q[1] - RH / 2 + 13 * s, 11 * s, COL.ivory, { font: DISP, align: 'left' });
+    txt(c, `partition ${j}`, q[0] + RW / 2 - 10 * s, q[1] - RH / 2 + 13 * s, 8 * s, COL.dim, { align: 'right' });
+    const keyA = seg(sh, 0.05, 0.2);
+    MR.keys[j].forEach((k) => txt(c, k, q[0] - RW / 2 + 10 * s, rowY(j, k), 9.5 * s, PC[j], { align: 'left', alpha: keyA }));
+  });
+  txt(c, 'partition = hash(word) mod 2', wide ? (mapAt[0][0] + redAt[0][0]) / 2 + 30 * s : r.x + r.w / 2, wide ? r.y + r.h * 0.97 : r.y + r.h * 0.47, 8.5 * s, COL.faint, { alpha: seg(sh, 0, 0.2) });
+  // ---- every (word, 1) pair: emitted, then shuffled in key order into its slot
+  type Pr = { w: string; i: number; k: number; n: number; part: number; slot: number; order: number };
+  const prs: Pr[] = [];
+  const slotCount: Record<string, number> = {};
+  MR.splits.forEach((ws, i) => ws.forEach((w, k) => { const sl = slotCount[w] ?? 0; slotCount[w] = sl + 1; prs.push({ w, i, k, n: ws.length, part: MR.part[w], slot: sl, order: 0 }); }));
+  [...prs].sort((a, b) => a.part - b.part || MR.keys[a.part].indexOf(a.w) - MR.keys[b.part].indexOf(b.w) || a.slot - b.slot).forEach((pr, o) => (pr.order = o));
+  const N = prs.length, gap = 0.62 / (N - 1);
+  const collapse = seg(rd, 0, 0.35);
+  prs.forEach((pr) => {
+    const emitK = eo(seg(mp, pr.i * 0.12 + pr.k * 0.05, pr.i * 0.12 + pr.k * 0.05 + 0.22));
+    if (emitK <= 0) return;
+    const home = emitAt(pr.i, pr.k, pr.n);
+    const dest: [number, number] = [slotX(pr.part, pr.slot), rowY(pr.part, pr.w)];
+    const fk = seg(sh, 0.12 + pr.order * gap, 0.12 + pr.order * gap + 0.26);
+    const col = PC[pr.part];
+    if (fk <= 0) {
+      const x = lerp(mapAt[pr.i][0], home[0], emitK), y = lerp(mapAt[pr.i][1], home[1], emitK);
+      pill(c, x, y, `(${pr.w}, 1)`, col, s, undefined, emitK);
+    } else if (fk < 1) {
+      const e = eio(fk), x = lerp(home[0], dest[0], e), y = lerp(home[1], dest[1], e) - Math.sin(fk * Math.PI) * 18 * s;
+      pill(c, x, y, fk < 0.7 ? `(${pr.w}, 1)` : '1', col, s);
+    } else {
+      // landed: a small square holding 1; during reduce the squares slide together and fade
+      const x = lerp(dest[0], slotX(pr.part, 0), collapse);
+      pill(c, x, dest[1], '1', col, s, undefined, 1 - seg(rd, 0.25, 0.4));
     }
   });
-  if (rd > 0.9) txt(c, 'output files', X[3], r.y + r.h * 0.12, 9 * s, COL.faint);
-  if (fx > 0.8) txt(c, 'same answer after the retry', X[3] - 10 * s, r.y + r.h * 0.95, 10 * s, COL.ok, { align: 'right', alpha: seg(fx, 0.8, 0.95) });
-  void dead;
+  // ---- reduce: totals appear, then fly to the output files
+  const totals: Record<string, number> = { graph: 3, sql: 3, nosql: 2 };
+  Object.keys(totals).forEach((w, j) => {
+    const part = MR.part[w];
+    const at: [number, number] = [slotX(part, 0) + 34 * s, rowY(part, w)];
+    const show = seg(rd, 0.3, 0.45);
+    if (show <= 0) return;
+    const fly = eio(seg(rd, 0.5 + j * 0.12, 0.76 + j * 0.12));
+    const o = outAt(w);
+    const x = lerp(at[0], o[0], fly), y = lerp(at[1], o[1], fly);
+    pill(c, x, y, fly > 0.5 ? `(${w}, ${totals[w]})` : `Σ = ${totals[w]}`, COL.ok, s * 1.08, 'rgba(20,32,22,0.96)', show);
+  });
+  if (rd > 0.8) txt(c, 'output files', outAt('graph')[0], wide ? r.y + r.h * 0.2 : outAt('graph')[1] - 22 * s, 8.5 * s, COL.faint, { align: wide ? 'center' : 'left', alpha: seg(rd, 0.8, 0.95) });
+  if (fx > 0.7) txt(c, 'same answer after the retry', wide ? r.x + r.w - 12 * s : r.x + r.w / 2, wide ? r.y + r.h * 0.94 : r.y + r.h * 0.5, 9.5 * s, COL.ok, { align: wide ? 'right' : 'center', alpha: seg(fx, 0.7, 0.85) });
 };
 
 const DRAWS: Record<string, Draw> = { tpc: drawTpc, dqp: drawDqp, mr: drawMr };
